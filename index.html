@@ -1,137 +1,171 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<title>南門國小拼字挑戰 Go</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏫 南門國小拼字挑戰 GO</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f7fb;margin:0;padding:16px}
-.card{max-width:560px;margin:auto;background:#fff;border-radius:16px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.08)}
-h1{text-align:center;font-size:20px;margin:0 0 10px}
-.btn{padding:10px 14px;border:none;border-radius:10px;font-size:14px;cursor:pointer;margin:4px}
-.primary{background:#4f7cff;color:#fff}
-.secondary{background:#e9ecf3}
-.choice{background:#f0f3ff;width:100%}
-.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.word{font-size:30px;font-weight:bold;text-align:center;margin:12px}
-.sub{text-align:center;color:#666}
-.msg{text-align:center;margin-top:6px}
-.ok{color:#2ecc71;font-weight:bold}
-.bad{color:#ff4d4f;font-weight:bold}
-select,input{padding:8px;border-radius:8px;border:1px solid #ccc}
+body{font-family:system-ui;background:#f5f7fb;margin:0;padding:20px}
+.card{background:#fff;border-radius:18px;padding:22px;max-width:520px;margin:auto;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+h1{text-align:center;margin:0 0 10px}
+.top{display:flex;justify-content:space-between;align-items:center}
+button{width:100%;padding:14px;margin:8px 0;border:none;border-radius:14px;font-size:18px}
+.listen{background:#4f7cff;color:#fff}
+.option{background:#eef1f7}
+.option:hover{background:#dbe3ff}
+.correct{background:#4caf50!important;color:#fff}
+.wrong{background:#f44336!important;color:#fff}
+.hidden{display:none}
+.small{font-size:14px;color:#666;text-align:center}
+input{width:100%;padding:14px;font-size:18px;border-radius:12px;border:1px solid #ccc}
 </style>
 </head>
 
 <body>
-<div class="card">
-<h1>🏫 南門國小拼字挑戰 GO</h1>
 
-<div id="studentArea"></div>
-<hr>
+<div class="card" id="login">
+  <h1>🏫 南門國小拼字挑戰 Go</h1>
+  <p class="small">請輸入學生姓名</p>
+  <input id="studentName" placeholder="例如：王小明">
+  <button onclick="login()">開始挑戰</button>
+</div>
 
-<div id="game"></div>
-
-<button class="btn secondary" onclick="teacher()">👩‍🏫 老師後台</button>
+<div class="card hidden" id="game">
+  <div class="top">
+    <strong id="studentLabel"></strong>
+    <button onclick="openTeacher()">👩‍🏫</button>
+  </div>
+  <p id="progress" class="small"></p>
+  <div id="question"></div>
+  <div id="options"></div>
+  <p id="msg" class="small"></p>
 </div>
 
 <script>
-/* ===== 基本資料 ===== */
-const WORDS=[
-{en:"apple",zh:"蘋果"},{en:"book",zh:"書"},{en:"cat",zh:"貓"},
-{en:"dog",zh:"狗"},{en:"ball",zh:"球"},{en:"bird",zh:"鳥"},
-{en:"milk",zh:"牛奶"},{en:"fish",zh:"魚"}
+/* ===== 153 單字 ===== */
+const WORDS = [
+{en:"able",zh:"能夠"},{en:"about",zh:"關於"},{en:"after",zh:"之後"},
+{en:"again",zh:"再一次"},{en:"air",zh:"空氣"},{en:"all",zh:"全部"},
+{en:"always",zh:"總是"},{en:"animal",zh:"動物"},{en:"answer",zh:"回答"},
+{en:"apple",zh:"蘋果"},{en:"ask",zh:"問"},{en:"baby",zh:"嬰兒"},
+{en:"back",zh:"後面"},{en:"ball",zh:"球"},{en:"bed",zh:"床"},
+{en:"big",zh:"大的"},{en:"bird",zh:"鳥"},{en:"black",zh:"黑色"},
+{en:"blue",zh:"藍色"},{en:"book",zh:"書"},{en:"boy",zh:"男孩"},
+{en:"bread",zh:"麵包"},{en:"bring",zh:"帶來"},{en:"brother",zh:"哥哥"},
+{en:"bus",zh:"公車"},{en:"cake",zh:"蛋糕"},{en:"cat",zh:"貓"},
+{en:"chair",zh:"椅子"},{en:"chicken",zh:"雞"},{en:"child",zh:"小孩"},
+{en:"clean",zh:"乾淨"},{en:"close",zh:"關"},{en:"cold",zh:"冷"},
+{en:"come",zh:"來"},{en:"cow",zh:"牛"},{en:"day",zh:"白天"},
+{en:"desk",zh:"書桌"},{en:"dog",zh:"狗"},{en:"door",zh:"門"},
+{en:"down",zh:"向下"},{en:"drink",zh:"喝"},{en:"eat",zh:"吃"},
+{en:"egg",zh:"蛋"},{en:"end",zh:"結束"},{en:"eye",zh:"眼睛"},
+{en:"face",zh:"臉"},{en:"family",zh:"家人"},{en:"fast",zh:"快"},
+{en:"father",zh:"爸爸"},{en:"fish",zh:"魚"},{en:"flower",zh:"花"},
+{en:"food",zh:"食物"},{en:"friend",zh:"朋友"},{en:"fun",zh:"好玩"},
+{en:"game",zh:"遊戲"},{en:"girl",zh:"女孩"},{en:"go",zh:"去"},
+{en:"good",zh:"好的"},{en:"green",zh:"綠色"},{en:"hand",zh:"手"},
+{en:"happy",zh:"快樂"},{en:"hat",zh:"帽子"},{en:"have",zh:"有"},
+{en:"head",zh:"頭"},{en:"help",zh:"幫忙"},{en:"home",zh:"家"},
+{en:"hot",zh:"熱"},{en:"house",zh:"房子"},{en:"hungry",zh:"餓"},
+{en:"ice",zh:"冰"},{en:"jump",zh:"跳"},{en:"kind",zh:"善良"},
+{en:"kite",zh:"風箏"},{en:"leg",zh:"腳"},{en:"like",zh:"喜歡"},
+{en:"lion",zh:"獅子"},{en:"little",zh:"小的"},{en:"look",zh:"看"},
+{en:"love",zh:"愛"},{en:"man",zh:"男人"},{en:"many",zh:"很多"},
+{en:"milk",zh:"牛奶"},{en:"mother",zh:"媽媽"},{en:"mouse",zh:"老鼠"},
+{en:"name",zh:"名字"},{en:"near",zh:"靠近"},{en:"new",zh:"新的"},
+{en:"night",zh:"晚上"},{en:"nose",zh:"鼻子"},{en:"open",zh:"打開"},
+{en:"orange",zh:"橘子"},{en:"paper",zh:"紙"},{en:"park",zh:"公園"},
+{en:"pen",zh:"筆"},{en:"pencil",zh:"鉛筆"},{en:"play",zh:"玩"},
+{en:"rain",zh:"下雨"},{en:"read",zh:"讀"},{en:"red",zh:"紅色"},
+{en:"rice",zh:"飯"},{en:"run",zh:"跑"},{en:"school",zh:"學校"},
+{en:"see",zh:"看見"},{en:"sheep",zh:"羊"},{en:"shoe",zh:"鞋子"},
+{en:"sing",zh:"唱歌"},{en:"sister",zh:"姊姊"},{en:"sit",zh:"坐"},
+{en:"sleep",zh:"睡覺"},{en:"small",zh:"小"},{en:"snow",zh:"下雪"},
+{en:"son",zh:"兒子"},{en:"star",zh:"星星"},{en:"sun",zh:"太陽"},
+{en:"table",zh:"桌子"},{en:"teacher",zh:"老師"},{en:"thank",zh:"感謝"},
+{en:"time",zh:"時間"},{en:"tiger",zh:"老虎"},{en:"toy",zh:"玩具"},
+{en:"tree",zh:"樹"},{en:"up",zh:"向上"},{en:"walk",zh:"走"},
+{en:"water",zh:"水"},{en:"white",zh:"白色"},{en:"window",zh:"窗戶"},
+{en:"work",zh:"工作"},{en:"yellow",zh:"黃色"}
 ];
-const TYPES=["listen","spell","match"];
 
-/* ===== 存取 ===== */
-let DB=JSON.parse(localStorage.getItem("NM_DB"))||{students:{},current:""};
-function save(){localStorage.setItem("NM_DB",JSON.stringify(DB));}
+/* ===== 狀態 ===== */
+let student="",data={};
 
-/* ===== 學生 ===== */
-function renderStudents(){
-  let s=Object.keys(DB.students).map(n=>`<option>${n}</option>`).join("");
-  studentArea.innerHTML=`
-    學生：
-    <select onchange="selectStudent(this.value)">${s}</select>
-    <input id="newName" placeholder="新增學生">
-    <button class="btn primary" onclick="addStudent()">新增</button>`;
+function login(){
+  student=document.getElementById("studentName").value.trim();
+  if(!student)return;
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+  document.getElementById("studentLabel").innerText=student;
+  data=JSON.parse(localStorage.getItem("nm_"+student))||{level:1,q:0,log:[]};
+  next();
 }
-function addStudent(){
-  let n=newName.value.trim();
-  if(!n||DB.students[n])return;
-  DB.students[n]={level:1,q:1,records:[]};
-  DB.current=n; save(); renderStudents(); renderGame();
-}
-function selectStudent(n){DB.current=n; save(); renderGame();}
 
-/* ===== 遊戲 ===== */
-function renderGame(){
-  if(!DB.current){game.innerHTML="<p>請先新增學生</p>";return;}
-  let st=DB.students[DB.current];
-  let w=WORDS[Math.floor(Math.random()*WORDS.length)];
-  let t=TYPES[Math.floor(Math.random()*TYPES.length)];
+function save(){localStorage.setItem("nm_"+student,JSON.stringify(data));}
 
-  if(t==="listen"){
-    game.innerHTML=`
-      <div class="sub">👂 聽一聽</div>
-      <div class="word">${w.en}</div>
-      <button class="btn secondary" onclick="speak('${w.en}')">🔊 聽</button>
-      <button class="btn primary" onclick="next(true,'listen','${w.en}')">完成</button>`;
+function speak(w){speechSynthesis.speak(new SpeechSynthesisUtterance(w));}
+function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+
+function next(){
+  if(data.q>=10){data.level++;data.q=0;}
+  if(data.level>100){
+    document.getElementById("question").innerHTML="🎉 全部完成！";
+    document.getElementById("options").innerHTML="";
+    return;
   }
-  if(t==="spell"){
-    game.innerHTML=`
-      <div class="sub">🔤 拼一拼</div>
-      <div class="word">${w.zh}</div>
-      <button class="btn primary" onclick="next(true,'spell','${w.en}')">完成</button>`;
+
+  document.getElementById("progress").innerText=
+    `第 ${data.level} 關（${data.q+1}/10）`;
+
+  const word=WORDS[(data.level*10+data.q)%WORDS.length];
+  const mode=["聽","看","配對"][Math.floor(Math.random()*3)];
+  data.q++; save();
+
+  document.getElementById("options").innerHTML="";
+  document.getElementById("msg").innerText="";
+
+  if(mode==="聽"){
+    document.getElementById("question").innerHTML=
+      `<button class="listen" onclick="speak('${word.en}')">🔊 聽</button>`;
+  }else{
+    document.getElementById("question").innerHTML=`<h2>${word.en}</h2>`;
   }
-  if(t==="match"){
-    let opts=[w.zh,...WORDS.slice(0,2).map(x=>x.zh)].sort(()=>Math.random()-.5);
-    game.innerHTML=`
-      <div class="sub">🧩 配對</div>
-      <div class="word">${w.en}</div>
-      ${opts.map(o=>`<button class="btn choice" onclick="check('${o}','${w.zh}','${w.en}')">${o}</button>`).join("")}`;
-  }
-}
-function speak(t){speechSynthesis.speak(new SpeechSynthesisUtterance(t));}
-function check(o,a,en){
-  next(o===a,"match",en);
-}
-function next(ok,type,en){
-  DB.students[DB.current].records.push({
-    student:DB.current,word:en,type,ok,time:new Date().toISOString()
+
+  const opts=shuffle([
+    word.zh,
+    ...WORDS.filter(w=>w.zh!==word.zh).slice(0,3).map(w=>w.zh)
+  ]);
+
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="option";
+    b.innerText=o;
+    b.onclick=()=>{
+      if(o!==word.zh){
+        data.log.push({student,level:data.level,en:word.en,zh:word.zh,mode});
+      }
+      save();
+      setTimeout(next,600);
+    };
+    document.getElementById("options").appendChild(b);
   });
-  save(); renderGame();
 }
 
-/* ===== 老師後台 ===== */
-function teacher(){
+function openTeacher(){
   let rows=[];
-  Object.values(DB.students).forEach(s=>{
-    s.records.forEach(r=>rows.push(r));
-  });
-  game.innerHTML=`
-    <h3>👩‍🏫 老師後台</h3>
-    <button class="btn primary" onclick="exportCSV()">📤 匯出 Excel</button>
-    <p>共有 ${rows.length} 筆作答紀錄</p>`;
+  for(let k in localStorage){
+    if(k.startsWith("nm_")){
+      const d=JSON.parse(localStorage[k]);
+      d.log.forEach(r=>{
+        rows.push(`${r.student},${r.level},${r.mode},${r.en},${r.zh}`);
+      });
+    }
+  }
+  const csv="學生,關卡,題型,英文,中文\n"+rows.join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  window.open(URL.createObjectURL(blob));
 }
-
-/* ===== 匯出 ===== */
-function exportCSV(){
-  let rows=["學生,單字,題型,是否正確"];
-  Object.values(DB.students).forEach(s=>{
-    s.records.forEach(r=>{
-      rows.push(`${r.student},${r.word},${r.type},${r.ok?"正確":"錯誤"}`);
-    });
-  });
-  let blob=new Blob([rows.join("\n")],{type:"text/csv"});
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="拼字成績.csv";
-  a.click();
-}
-
-/* ===== 啟動 ===== */
-renderStudents(); renderGame();
 </script>
 </body>
 </html>
