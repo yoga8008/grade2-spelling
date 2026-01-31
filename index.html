@@ -29,8 +29,6 @@ body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Noto San
 .node.done{background:var(--green);color:#fff}
 .bad{color:var(--red);font-weight:900}
 .ok{color:var(--green);font-weight:900}
-
-/* 發音速度 */
 .speed{font-size:14px;color:#334155;text-align:center;margin-top:6px}
 
 /* 彩帶 */
@@ -55,7 +53,7 @@ th{background:#f1f5f9}
 </div>
 
 <!-- 學生登入 -->
-<div id="login" class="card center">
+<div id="loginView" class="card center">
   <h2>學生登入</h2>
   <input id="studentName" placeholder="輸入學生姓名" />
   <div style="height:8px"></div>
@@ -133,7 +131,7 @@ let student="", level=1, q=0, score=0, cur=null;
 let passed=JSON.parse(localStorage.getItem("passed")||"{}");
 let stats=JSON.parse(localStorage.getItem("stats")||"{}");
 
-/* ===== 發音 ===== */
+/* ===== 發音（可調速） ===== */
 let RATE=Number(localStorage.getItem("rate")||0.65);
 rate.value=RATE; rateLabel.textContent=RATE;
 rate.oninput=e=>{RATE=Number(e.target.value);rateLabel.textContent=RATE;localStorage.setItem("rate",RATE)};
@@ -148,10 +146,13 @@ function speak(w){
 
 /* ===== 登入/地圖 ===== */
 function login(){
-  student = document.getElementById("studentName").value.trim(); if(!student) return alert("請輸入姓名");
-  loginDiv(); drawMap();
+  const el=document.getElementById("studentName");
+  student=el.value.trim();
+  if(!student){ alert("請輸入學生姓名"); return; }
+  document.getElementById("loginView").classList.add("hidden");
+  document.getElementById("mapView").classList.remove("hidden");
+  drawMap();
 }
-function loginDiv(){login.classList.add("hidden"); mapView.classList.remove("hidden");}
 function drawMap(){
   map.innerHTML="";
   for(let i=1;i<=LEVELS;i++){
@@ -164,58 +165,47 @@ function drawMap(){
 }
 function startLevel(l){
   level=l; q=0; score=0;
-  mapView.classList.add("hidden"); gameView.classList.remove("hidden");
+  document.getElementById("mapView").classList.add("hidden");
+  document.getElementById("gameView").classList.remove("hidden");
   nextQ();
 }
 
-/* ===== 出題（A/B/C/D 隨機；一關 10 題） ===== */
+/* ===== 出題（A/B/C/D 隨機） ===== */
 function nextQ(){
   nextBtn.classList.add("hidden"); hint.textContent="";
   if(q>=Q_PER){ finish(); return; }
   cur=WORDS[Math.floor(Math.random()*WORDS.length)];
   const mode=["A","B","C","D"][Math.floor(Math.random()*4)];
   opts.innerHTML="";
-  if(mode==="A"){ // 聽→選中（不顯英）
-    qText.textContent="🔊 聽音，選正確中文";
-    speak(cur.en);
-    makeChoices(cur.zh,false);
-  }else if(mode==="B"){ // 看英→選中
-    qText.textContent=cur.en;
-    makeChoices(cur.zh,true);
-  }else if(mode==="C"){ // 配對（簡化：選對）
-    qText.textContent="英中配對："+cur.en;
-    makeChoices(cur.zh,true);
-  }else{ // D 聽→拼
-    qText.textContent="🔊 聽音，拼英文";
-    speak(cur.en);
-    const letters=shuffle(cur.en.split(""));
-    letters.forEach(ch=>{
-      const b=document.createElement("button"); b.className="opt"; b.textContent=ch;
-      b.onclick=()=>{ b.classList.add("hidden"); guess+=ch; if(guess.length===cur.en.length) checkSpell(); };
-      opts.appendChild(b);
-    });
-    guess=""; return;
-  }
+  if(mode==="A"){ qText.textContent="🔊 聽音，選正確中文"; speak(cur.en); makeChoices(cur.zh); }
+  else if(mode==="B"){ qText.textContent=cur.en; makeChoices(cur.zh); }
+  else if(mode==="C"){ qText.textContent="英中配對："+cur.en; makeChoices(cur.zh); }
+  else{ qText.textContent="🔊 聽音，拼英文"; speak(cur.en); spellMode(); q++; barFill.style.width=(q/Q_PER*100)+"%"; return; }
   q++; barFill.style.width=(q/Q_PER*100)+"%";
 }
-let guess="";
-function makeChoices(ans,showEn){
+function makeChoices(ans){
   const pool=shuffle(WORDS.map(x=>x.zh)).slice(0,3);
-  const choices=shuffle([ans,...pool]);
-  choices.forEach(c=>{
+  shuffle([ans,...pool]).forEach(c=>{
     const b=document.createElement("button"); b.className="opt"; b.textContent=c;
-    b.onclick=()=>{
-      if(c===ans){score++; hint.innerHTML='<span class="ok">✅ 答對</span>';}
+    b.onclick=()=>{ if(c===ans){score++; hint.innerHTML='<span class="ok">✅ 答對</span>';}
       else{hint.innerHTML='<span class="bad">❌ 正確答案：'+ans+'</span>';}
       nextBtn.classList.remove("hidden");
     };
     opts.appendChild(b);
   });
 }
-function checkSpell(){
-  if(guess===cur.en){score++; hint.innerHTML='<span class="ok">✅ 答對</span>';}
-  else{hint.innerHTML='<span class="bad">❌ 正確拼字：'+cur.en+'</span>';}
-  nextBtn.classList.remove("hidden");
+let guess="";
+function spellMode(){
+  guess="";
+  shuffle(cur.en.split("")).forEach(ch=>{
+    const b=document.createElement("button"); b.className="opt"; b.textContent=ch;
+    b.onclick=()=>{ guess+=ch; b.disabled=true; if(guess.length===cur.en.length){
+      if(guess===cur.en){score++; hint.innerHTML='<span class="ok">✅ 答對</span>';}
+      else{hint.innerHTML='<span class="bad">❌ 正確拼字：'+cur.en+'</span>';}
+      nextBtn.classList.remove("hidden");
+    }};
+    opts.appendChild(b);
+  });
 }
 
 /* ===== 結束/彩帶 ===== */
@@ -227,7 +217,7 @@ function finish(){
   stats[student].passed=Object.keys(passed).length;
   localStorage.setItem("stats",JSON.stringify(stats));
 }
-function back(){location.reload();}
+function back(){ location.reload(); }
 function confetti(){
   const wrap=document.createElement("div"); wrap.id="confetti"; document.body.appendChild(wrap);
   const colors=["#22c55e","#38bdf8","#facc15","#fb7185"];
@@ -238,7 +228,7 @@ function confetti(){
   }
   setTimeout(()=>wrap.remove(),2000);
 }
-function shuffle(a){return a.sort(()=>.5-Math.random())}
+function shuffle(a){ return a.sort(()=>.5-Math.random()); }
 
 /* ===== 老師後台 ===== */
 function toggleTeacher(){
