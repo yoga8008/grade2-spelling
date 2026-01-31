@@ -1,204 +1,630 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<title>🦊 拼字小狐狸｜100關混合模式</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🦊 南門國小英文單字挑戰｜100關×10字（不口說）</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont;background:#f5f7fb;padding:20px}
-.card{background:#fff;max-width:480px;margin:auto;border-radius:16px;
-padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);text-align:center}
-h1{font-size:20px}
-.word{font-size:32px;font-weight:bold;margin:12px 0}
-.btn{width:100%;padding:12px;margin:6px 0;border:none;border-radius:10px;font-size:16px}
-.primary{background:#4f7cff;color:#fff}
-.secondary{background:#e9ecf3}
-.choice{background:#f0f3ff}
-.hint{font-size:14px;color:#666}
-small{color:#555}
+  :root{
+    --bg:#f5f7fb; --card:#fff; --text:#111; --muted:#666;
+    --primary:#4f7cff; --secondary:#e9ecf3; --choice:#f0f3ff;
+    --danger:#ff4d4f; --ok:#2ecc71;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);margin:0;padding:18px;color:var(--text);}
+  .card{background:var(--card);max-width:520px;margin:0 auto;border-radius:16px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.08);text-align:center;}
+  h1{font-size:20px;margin:0 0 10px;}
+  .topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 14px;flex-wrap:wrap;}
+  .pill{background:var(--secondary);padding:8px 10px;border-radius:999px;font-size:13px;color:#333;}
+  .stars{font-size:14px;color:#333;}
+  .word{font-size:34px;font-weight:800;margin:10px 0 6px;letter-spacing:.5px;}
+  .sub{font-size:14px;color:var(--muted);margin:6px 0 10px;}
+  .btn{width:100%;padding:12px 12px;margin:6px 0;border:none;border-radius:12px;font-size:16px;cursor:pointer;}
+  .primary{background:var(--primary);color:#fff;}
+  .secondary{background:var(--secondary);}
+  .choice{background:var(--choice);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;}
+  .chip{padding:10px 12px;border-radius:12px;border:none;background:var(--secondary);cursor:pointer;font-size:16px;min-width:46px;}
+  .chip:active{transform:scale(.98);}
+  .tinyrow{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
+  .tinybtn{padding:10px 12px;border-radius:12px;border:none;background:var(--secondary);cursor:pointer;font-size:14px;}
+  .hint{font-size:13px;color:var(--muted);margin-top:8px;}
+  .msg{margin-top:8px;font-size:14px;}
+  .ok{color:var(--ok);font-weight:700;}
+  .bad{color:var(--danger);font-weight:700;}
+  .divider{height:1px;background:#eee;margin:12px 0;}
+  .left{text-align:left;}
+  .table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  .table th,.table td{border-bottom:1px solid #eee;padding:8px 6px;text-align:left;}
+  .k{color:#333;font-weight:700;}
+  .muted{color:var(--muted);}
+  .linkbtn{background:transparent;border:none;color:var(--primary);cursor:pointer;padding:0;font-size:14px;}
 </style>
 </head>
 <body>
-
 <div class="card">
-<h1>🦊 拼字小狐狸</h1>
-<div id="info"></div>
-<div id="stage"></div>
-<button class="btn secondary" onclick="showTeacher()">👩‍🏫 老師後台</button>
+  <h1>🦊 拼字小狐狸（不口說）</h1>
+
+  <div class="topline">
+    <div class="pill" id="levelInfo">🎯 第 1 關（1/10）</div>
+    <div class="pill stars" id="starInfo">⭐ 0</div>
+    <button class="linkbtn" onclick="openTeacher()">👩‍🏫 老師後台</button>
+  </div>
+
+  <div id="stage"></div>
 </div>
 
 <script>
-// ===== 單字（153）=====
-const words = [
-{en:"able",zh:"能夠"},{en:"all",zh:"所有"},{en:"after",zh:"在…之後"},
-{en:"and",zh:"和"},{en:"any",zh:"任何"},{en:"ant",zh:"螞蟻"},
-{en:"apple",zh:"蘋果"},{en:"April",zh:"四月"},{en:"ask",zh:"問"},
-{en:"book",zh:"書"},{en:"ball",zh:"球"},{en:"basket",zh:"籃子"},
-{en:"banana",zh:"香蕉"},{en:"bank",zh:"銀行"},{en:"bath",zh:"洗澡"},
-{en:"bat",zh:"球棒;蝙蝠"},{en:"beach",zh:"海灘"},{en:"become",zh:"成為"},
-{en:"bed",zh:"床"},{en:"bee",zh:"蜜蜂"},{en:"bite",zh:"咬"},
-{en:"bicycle",zh:"腳踏車"},{en:"bird",zh:"鳥"},
-{en:"black",zh:"黑色"},{en:"blue",zh:"藍色"},
-{en:"boat",zh:"船"},{en:"box",zh:"盒子"},
-{en:"boy",zh:"男孩"},{en:"bread",zh:"麵包"},
-{en:"break",zh:"斷裂；暫停"},{en:"brother",zh:"兄弟"},
-{en:"cake",zh:"蛋糕"},{en:"cap",zh:"棒球帽"},
-{en:"camp",zh:"營地；帳篷"},{en:"card",zh:"卡片"},
-{en:"candy",zh:"糖果"},{en:"care",zh:"關懷；照顧"},
-{en:"catch",zh:"抓"},{en:"chair",zh:"椅子"},
-{en:"chalk",zh:"粉筆"},{en:"check",zh:"打勾；確認"},
-{en:"cool",zh:"涼爽的;酷"},{en:"child",zh:"小孩"},
-{en:"circle",zh:"圓"},{en:"coffee",zh:"咖啡"},
-{en:"cup",zh:"杯子"},{en:"cute",zh:"可愛的"},
-{en:"dark",zh:"黑暗的"},{en:"dance",zh:"跳舞"},
-{en:"dear",zh:"親愛的"},{en:"desk",zh:"桌子"},
-{en:"doctor",zh:"醫生"},{en:"dirty",zh:"髒的"},
-{en:"doll",zh:"娃娃"},{en:"dinner",zh:"晚餐"},
-{en:"duck",zh:"鴨子"},{en:"early",zh:"早的"},
-{en:"ear",zh:"耳朵"},{en:"egg",zh:"蛋"},
-{en:"elf",zh:"精靈"},{en:"elephant",zh:"大象"},
-{en:"eraser",zh:"橡皮擦"},{en:"fact",zh:"事實"},
-{en:"famous",zh:"有名的"},{en:"fast",zh:"快速"},
-{en:"father",zh:"爸爸"},{en:"fin",zh:"魚鰭"},
-{en:"feel",zh:"感覺"},{en:"find",zh:"尋找"},
-{en:"first",zh:"第一"},{en:"fix",zh:"修理"},
-{en:"flower",zh:"花"},{en:"food",zh:"食物"},
-{en:"forget",zh:"忘記"},{en:"fork",zh:"叉子"},
-{en:"gas",zh:"瓦斯"},{en:"girl",zh:"女孩"},
-{en:"game",zh:"遊戲"},{en:"goat",zh:"山羊"},
-{en:"green",zh:"綠色"},{en:"garden",zh:"花園"},
-{en:"give",zh:"給予"},{en:"hat",zh:"帽子"},
-{en:"ham",zh:"火腿"},{en:"hand",zh:"手"},
-{en:"happy",zh:"快樂的"},{en:"hair",zh:"頭髮"},
-{en:"hard",zh:"困難"},{en:"hear",zh:"聽"},
-{en:"heart",zh:"心臟"},{en:"heat",zh:"發熱"},
-{en:"help",zh:"幫助"},{en:"in",zh:"在…裡面"},
-{en:"ice",zh:"冰"},{en:"igloo",zh:"冰屋"},
-{en:"jam",zh:"果醬"},{en:"jacket",zh:"夾克"},
-{en:"job",zh:"工作"},{en:"jump",zh:"跳"},
-{en:"kiss",zh:"親吻"},{en:"kite",zh:"風箏"},
-{en:"key",zh:"鑰匙"},{en:"knee",zh:"膝蓋"},
-{en:"lips",zh:"嘴唇"},{en:"land",zh:"土地"},
-{en:"lamp",zh:"燈"},{en:"lazy",zh:"懶惰"},
-{en:"leg",zh:"腿"},{en:"mask",zh:"面具"},
-{en:"map",zh:"地圖"},{en:"mail",zh:"郵件"},
-{en:"marker",zh:"彩色筆"},{en:"meat",zh:"肉"},
-{en:"moon",zh:"月亮"},{en:"mother",zh:"媽媽"},
-{en:"near",zh:"靠近"},{en:"neck",zh:"脖子"},
-{en:"need",zh:"需要"},{en:"news",zh:"新聞"},
-{en:"noon",zh:"中午"},{en:"nose",zh:"鼻子"},
-{en:"oil",zh:"油"},{en:"old",zh:"老的；舊的"},
-{en:"only",zh:"唯一"},{en:"page",zh:"頁數"},
-{en:"pet",zh:"寵物"},{en:"pencil",zh:"鉛筆"},
-{en:"pizza",zh:"比薩"},{en:"pot",zh:"鍋子"},
-{en:"pillow",zh:"枕頭"},{en:"queen",zh:"皇后"},
-{en:"question",zh:"問題"},{en:"quick",zh:"快的"},
-{en:"rat",zh:"鼠"},{en:"rain",zh:"雨"},
-{en:"red",zh:"紅色"},{en:"robot",zh:"機器人"},
-{en:"ruler",zh:"尺"},{en:"sand",zh:"沙"},
-{en:"same",zh:"相同"},{en:"send",zh:"送"},
-{en:"sew",zh:"縫補"},{en:"sing",zh:"唱歌"},
-{en:"sister",zh:"姐妹"},{en:"seven",zh:"7"},
-{en:"table",zh:"桌子"},{en:"talk",zh:"說話"},
-{en:"thank",zh:"感謝"},{en:"three",zh:"3"},
-{en:"teacher",zh:"老師"},{en:"tree",zh:"樹"},
-{en:"tub",zh:"浴缸"},{en:"turtle",zh:"烏龜"},
-{en:"up",zh:"上面"},{en:"yellow",zh:"黃色"}
+/* ========= 153 單字（沿用你先前清單） ========= */
+const WORDS = [
+  {en:"able",zh:"能夠"},{en:"all",zh:"所有"},{en:"after",zh:"在…之後"},
+  {en:"and",zh:"和"},{en:"any",zh:"任何"},{en:"ant",zh:"螞蟻"},
+  {en:"apple",zh:"蘋果"},{en:"April",zh:"四月"},{en:"ask",zh:"問"},
+  {en:"book",zh:"書"},{en:"ball",zh:"球"},{en:"basket",zh:"籃子"},
+  {en:"banana",zh:"香蕉"},{en:"bank",zh:"銀行"},{en:"bath",zh:"洗澡"},
+  {en:"bat",zh:"球棒;蝙蝠"},{en:"beach",zh:"海灘"},{en:"become",zh:"成為"},
+  {en:"bed",zh:"床"},{en:"bee",zh:"蜜蜂"},{en:"bite",zh:"咬"},
+  {en:"bicycle",zh:"腳踏車"},{en:"bird",zh:"鳥"},
+  {en:"black",zh:"黑色"},{en:"blue",zh:"藍色"},
+  {en:"boat",zh:"船"},{en:"box",zh:"盒子"},
+  {en:"boy",zh:"男孩"},{en:"bread",zh:"麵包"},
+  {en:"break",zh:"斷裂；暫停"},{en:"brother",zh:"兄弟"},
+  {en:"cake",zh:"蛋糕"},{en:"cap",zh:"棒球帽"},
+  {en:"camp",zh:"營地；帳篷"},{en:"card",zh:"卡片"},
+  {en:"candy",zh:"糖果"},{en:"care",zh:"關懷；照顧"},
+  {en:"catch",zh:"抓"},{en:"chair",zh:"椅子"},
+  {en:"chalk",zh:"粉筆"},{en:"check",zh:"打勾；確認"},
+  {en:"cool",zh:"涼爽的;酷"},{en:"child",zh:"小孩"},
+  {en:"circle",zh:"圓"},{en:"coffee",zh:"咖啡"},
+  {en:"cup",zh:"杯子"},{en:"cute",zh:"可愛的"},
+  {en:"dark",zh:"黑暗的"},{en:"dance",zh:"跳舞"},
+  {en:"dear",zh:"親愛的"},{en:"desk",zh:"桌子"},
+  {en:"doctor",zh:"醫生"},{en:"dirty",zh:"髒的"},
+  {en:"doll",zh:"娃娃"},{en:"dinner",zh:"晚餐"},
+  {en:"duck",zh:"鴨子"},{en:"early",zh:"早的"},
+  {en:"ear",zh:"耳朵"},{en:"egg",zh:"蛋"},
+  {en:"elf",zh:"精靈"},{en:"elephant",zh:"大象"},
+  {en:"eraser",zh:"橡皮擦"},{en:"fact",zh:"事實"},
+  {en:"famous",zh:"有名的"},{en:"fast",zh:"快速"},
+  {en:"father",zh:"爸爸"},{en:"fin",zh:"魚鰭"},
+  {en:"feel",zh:"感覺"},{en:"find",zh:"尋找"},
+  {en:"first",zh:"第一"},{en:"fix",zh:"修理"},
+  {en:"flower",zh:"花"},{en:"food",zh:"食物"},
+  {en:"forget",zh:"忘記"},{en:"fork",zh:"叉子"},
+  {en:"gas",zh:"瓦斯"},{en:"girl",zh:"女孩"},
+  {en:"game",zh:"遊戲"},{en:"goat",zh:"山羊"},
+  {en:"green",zh:"綠色"},{en:"garden",zh:"花園"},
+  {en:"give",zh:"給予"},{en:"hat",zh:"帽子"},
+  {en:"ham",zh:"火腿"},{en:"hand",zh:"手"},
+  {en:"happy",zh:"快樂的"},{en:"hair",zh:"頭髮"},
+  {en:"hard",zh:"困難"},{en:"hear",zh:"聽"},
+  {en:"heart",zh:"心臟"},{en:"heat",zh:"發熱"},
+  {en:"help",zh:"幫助"},{en:"in",zh:"在…裡面"},
+  {en:"ice",zh:"冰"},{en:"igloo",zh:"冰屋"},
+  {en:"jam",zh:"果醬"},{en:"jacket",zh:"夾克"},
+  {en:"job",zh:"工作"},{en:"jump",zh:"跳"},
+  {en:"kiss",zh:"親吻"},{en:"kite",zh:"風箏"},
+  {en:"key",zh:"鑰匙"},{en:"knee",zh:"膝蓋"},
+  {en:"lips",zh:"嘴唇"},{en:"land",zh:"土地"},
+  {en:"lamp",zh:"燈"},{en:"lazy",zh:"懶惰"},
+  {en:"leg",zh:"腿"},{en:"mask",zh:"面具"},
+  {en:"map",zh:"地圖"},{en:"mail",zh:"郵件"},
+  {en:"marker",zh:"彩色筆"},{en:"meat",zh:"肉"},
+  {en:"moon",zh:"月亮"},{en:"mother",zh:"媽媽"},
+  {en:"near",zh:"靠近"},{en:"neck",zh:"脖子"},
+  {en:"need",zh:"需要"},{en:"news",zh:"新聞"},
+  {en:"noon",zh:"中午"},{en:"nose",zh:"鼻子"},
+  {en:"oil",zh:"油"},{en:"old",zh:"老的；舊的"},
+  {en:"only",zh:"唯一"},{en:"page",zh:"頁數"},
+  {en:"pet",zh:"寵物"},{en:"pencil",zh:"鉛筆"},
+  {en:"pizza",zh:"比薩"},{en:"pot",zh:"鍋子"},
+  {en:"pillow",zh:"枕頭"},{en:"queen",zh:"皇后"},
+  {en:"question",zh:"問題"},{en:"quick",zh:"快的"},
+  {en:"rat",zh:"鼠"},{en:"rain",zh:"雨"},
+  {en:"red",zh:"紅色"},{en:"robot",zh:"機器人"},
+  {en:"ruler",zh:"尺"},{en:"sand",zh:"沙"},
+  {en:"same",zh:"相同"},{en:"send",zh:"送"},
+  {en:"sew",zh:"縫補"},{en:"sing",zh:"唱歌"},
+  {en:"sister",zh:"姐妹"},{en:"seven",zh:"7"},
+  {en:"table",zh:"桌子"},{en:"talk",zh:"說話"},
+  {en:"thank",zh:"感謝"},{en:"three",zh:"3"},
+  {en:"teacher",zh:"老師"},{en:"tree",zh:"樹"},
+  {en:"tub",zh:"浴缸"},{en:"turtle",zh:"烏龜"},
+  {en:"up",zh:"上面"},{en:"yellow",zh:"黃色"}
 ];
 
-// ===== 關卡設定（已照你需求）=====
-const PER_LEVEL = 10;   // 每關 10 個字
+/* ========= 遊戲設定 ========= */
+const PER_LEVEL = 10;
 const TOTAL_LEVELS = 100;
 
-// ===== 進度 & 錯誤 =====
-let progress = JSON.parse(localStorage.getItem("progress")) || {i:0,mode:0,build:""};
-let errors = JSON.parse(localStorage.getItem("errors")) || {};
-function save(){
-  localStorage.setItem("progress",JSON.stringify(progress));
-  localStorage.setItem("errors",JSON.stringify(errors));
-}
+/* ========= storage keys ========= */
+const K_PROGRESS = "fox_progress_v2";
+const K_STATS    = "fox_stats_v2";
 
-// ===== 工具 =====
-function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
-function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u);}
-function logError(type){
-  const w=words[progress.i].en;
-  errors[w]=errors[w]||{speak:0,choice:0,spell:0};
-  errors[w][type]++; save();
-}
-
-// ===== UI =====
-const stage=document.getElementById("stage");
-const info=document.getElementById("info");
-
-function render(){
-  const level=Math.floor(progress.i/PER_LEVEL)+1;
-  info.innerHTML=`🎯 第 ${level} 關（${progress.i%PER_LEVEL+1}/${PER_LEVEL}）`;
-  const w=words[progress.i];
-
-  if(progress.mode===0){
-    stage.innerHTML=`
-      <div class="word">${w.en}</div>
-      <button class="btn secondary" onclick="speak('${w.en}')">🔊 聽</button>
-      <button class="btn primary" onclick="startSpeech()">🎤 說</button>
-      <small>請唸英文</small>`;
+/* ========= 初始化狀態 =========
+progress: level(1..100), q(1..10), stage('listen'|'choice'|'spell'|'summary'),
+current: {en,zh}, listened, typed, triesStage {choice,spell}, starsThisLevel, wrongThisLevel[]
+stats:
+  wordStats[en]={listen:0,choice:0,spell:0,seen:0,correct:0}
+  history[level]={stars, wrong:[{en,at:'choice'|'spell'}], doneAtISO}
+*/
+const DEFAULT = {
+  progress:{
+    level:1, q:1, stage:"listen",
+    current:null, listened:false,
+    typed:"",
+    tries:{choice:0,spell:0},
+    starsThisLevel:0,
+    wrongThisLevel:[],
+    // 防止同一題一直抽到同字（小孩會覺得bug）
+    recent:[]
+  },
+  stats:{
+    wordStats:{},
+    history:{}
   }
+};
 
-  if(progress.mode===1){
-    const opts=shuffle([w.zh,...shuffle(words).slice(0,2).map(x=>x.zh)]);
-    stage.innerHTML=`
-      <div class="word">${w.en}</div>
-      ${opts.map(o=>`<button class="btn choice" onclick="checkChoice('${o}')">${o}</button>`).join("")}`;
-  }
-
-  if(progress.mode===2){
-    progress.build="";
-    const letters=shuffle(w.en.split(""));
-    stage.innerHTML=`
-      <div class="word">${"_".repeat(w.en.length)}</div>
-      ${letters.map(l=>`<button class="btn secondary" onclick="addLetter('${l}')">${l}</button>`).join("")}
-      <button class="btn primary" onclick="checkSpell()">確認</button>
-      <div class="hint">提示：${w.en[0]}...</div>`;
+function loadAll(){
+  try{
+    const rawP = localStorage.getItem(K_PROGRESS);
+    const rawS = localStorage.getItem(K_STATS);
+    const p = rawP ? JSON.parse(rawP) : DEFAULT.progress;
+    const s = rawS ? JSON.parse(rawS) : DEFAULT.stats;
+    // merge
+    return {
+      progress:{...DEFAULT.progress, ...p},
+      stats:{...DEFAULT.stats, ...s}
+    };
+  }catch(e){
+    return JSON.parse(JSON.stringify(DEFAULT));
   }
 }
+let state = loadAll();
 
-// ===== 行為 =====
-function next(){
-  progress.mode=(progress.mode+1)%3;
-  if(progress.mode===0) progress.i++;
-  save();
-  if(progress.i>=words.length){
-    stage.innerHTML="<h2>🎉 全部完成！</h2>";
-    return;
+function saveAll(){
+  localStorage.setItem(K_PROGRESS, JSON.stringify(state.progress));
+  localStorage.setItem(K_STATS, JSON.stringify(state.stats));
+}
+
+/* ========= helpers ========= */
+const stageEl = document.getElementById("stage");
+const levelInfoEl = document.getElementById("levelInfo");
+const starInfoEl = document.getElementById("starInfo");
+
+function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
+
+function starString(n){
+  const m = clamp(n,0,10);
+  return "⭐".repeat(m) + "☆".repeat(10-m);
+}
+
+function ensureWordStat(en){
+  const ws = state.stats.wordStats;
+  if(!ws[en]) ws[en]={listen:0,choice:0,spell:0,seen:0,correct:0};
+  return ws[en];
+}
+
+function speak(text){
+  // iOS: 第一次最好由使用者點擊觸發（我們就是按「聽」）
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+/* ========= 題目抽選（新字70% + 錯題回鍋30%） =========
+- “新字”：seen較少的字（seen==0優先）
+- “回鍋”：錯誤次數高的字（choice+spell越高權重越大）
+- recent 避免連抽同字
+*/
+function pickWord(){
+  const ws = state.stats.wordStats;
+  const recent = state.progress.recent || [];
+  // 建立評分
+  const items = WORDS.map(w=>{
+    const st = ws[w.en] || {listen:0,choice:0,spell:0,seen:0,correct:0};
+    const err = (st.choice||0) + (st.spell||0);
+    const seen = st.seen||0;
+    const isRecent = recent.includes(w.en);
+    return {w, err, seen, isRecent};
+  });
+
+  const wantReview = Math.random() < 0.30; // 30%回鍋
+  let pool;
+
+  if(wantReview){
+    // 回鍋池：有錯誤的優先；都沒錯就退回新字池
+    pool = items.filter(x=>x.err>0 && !x.isRecent);
+    if(pool.length===0) pool = items.filter(x=>!x.isRecent);
+    // 權重：錯越多越常出（err+1）
+    return weightedPick(pool, x => (x.err+1) * 3);
+  }else{
+    // 新字池：seen最少的優先
+    pool = items.filter(x=>!x.isRecent);
+    // 權重：seen越少越大（1/(seen+1)）
+    return weightedPick(pool, x => 5/(x.seen+1));
   }
+}
+
+function weightedPick(pool, weightFn){
+  let total = 0;
+  const weights = pool.map(x=>{
+    const w = Math.max(0.0001, weightFn(x));
+    total += w;
+    return w;
+  });
+  let r = Math.random()*total;
+  for(let i=0;i<pool.length;i++){
+    r -= weights[i];
+    if(r<=0) return pool[i].w;
+  }
+  return pool[pool.length-1].w;
+}
+
+/* ========= UI render ========= */
+function renderTop(){
+  const p = state.progress;
+  levelInfoEl.textContent = `🎯 第 ${p.level} 關（${p.q}/${PER_LEVEL}）`;
+  starInfoEl.textContent = `${starString(p.starsThisLevel)}  (${p.starsThisLevel}/10)`;
+}
+
+function setMessage(html){
+  const el = document.getElementById("msg");
+  if(el) el.innerHTML = html;
+}
+
+function startNewQuestion(){
+  const p = state.progress;
+  const w = pickWord();
+  p.current = {en:w.en, zh:w.zh};
+  p.stage = "listen";
+  p.listened = false;
+  p.typed = "";
+  p.tries = {choice:0, spell:0};
+
+  // recent queue
+  p.recent = Array.isArray(p.recent) ? p.recent : [];
+  p.recent.unshift(w.en);
+  p.recent = p.recent.slice(0,5);
+
+  const st = ensureWordStat(w.en);
+  st.seen += 1;
+  saveAll();
   render();
 }
 
-function startSpeech(){
-  const r=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-  r.lang="en-US";r.start();
-  r.onresult=e=>{
-    if(e.results[0][0].transcript.toLowerCase().trim()===words[progress.i].en){
-      next();
-    }else{logError("speak");alert("再試一次");}
-  };
+function goStage(nextStage){
+  state.progress.stage = nextStage;
+  saveAll();
+  render();
 }
-function checkChoice(o){ o===words[progress.i].zh ? next() : (logError("choice"),alert("再想想")); }
-function addLetter(l){ progress.build+=l; document.querySelector(".word").innerText=progress.build; }
-function checkSpell(){ progress.build===words[progress.i].en ? next() : (logError("spell"),alert("差一點")); }
 
-// ===== 老師後台 =====
-function showTeacher(){
-  let html="<h3>👩‍🏫 錯誤統計</h3>";
-  if(!Object.keys(errors).length){stage.innerHTML="<p>目前沒有錯誤紀錄</p>";return;}
-  for(const w in errors){
-    const e=errors[w];
-    html+=`<p>${w}｜🎤${e.speak} 🟦${e.choice} 🔤${e.spell}</p>`;
+function nextQuestion(){
+  const p = state.progress;
+  if(p.q >= PER_LEVEL){
+    // level done
+    finishLevel();
+  }else{
+    p.q += 1;
+    saveAll();
+    startNewQuestion();
   }
-  stage.innerHTML=html;
 }
 
-// ===== 啟動 =====
+function finishLevel(){
+  const p = state.progress;
+  const level = p.level;
+
+  state.stats.history[level] = {
+    stars: p.starsThisLevel,
+    wrong: p.wrongThisLevel,
+    doneAtISO: new Date().toISOString()
+  };
+
+  p.stage = "summary";
+  saveAll();
+  render();
+}
+
+function nextLevel(){
+  const p = state.progress;
+  if(p.level >= TOTAL_LEVELS){
+    // 全部關卡完成（仍可繼續練）
+    p.level = TOTAL_LEVELS;
+  }else{
+    p.level += 1;
+  }
+  p.q = 1;
+  p.starsThisLevel = 0;
+  p.wrongThisLevel = [];
+  saveAll();
+  startNewQuestion();
+}
+
+/* ========= Game screens ========= */
+function render(){
+  renderTop();
+  const p = state.progress;
+  const cur = p.current;
+
+  // 初次進來沒有題目 → 先開第一題
+  if(!cur && p.stage!=="summary"){
+    startNewQuestion();
+    return;
+  }
+
+  if(p.stage === "listen"){
+    stageEl.innerHTML = `
+      <div class="word">${cur.en}</div>
+      <button class="btn secondary" onclick="onListen()">🔊 聽（點這裡）</button>
+      <button class="btn primary" onclick="toChoice()" ${p.listened ? "" : "disabled"} style="${p.listened? "" : "opacity:.45;cursor:not-allowed;"}">下一步：選中文</button>
+      <div class="sub">規則：要先按「聽」才會解鎖下一步</div>
+      <div id="msg" class="msg"></div>
+    `;
+    setMessage(p.listened ? `<span class="ok">✔ 已聽過了！</span> 可以進下一步` : `<span class="muted">先按一次「🔊 聽」</span>`);
+    return;
+  }
+
+  if(p.stage === "choice"){
+    const correct = cur.zh;
+    const distractors = pickDistractors(correct, 3);
+    const options = shuffle([correct, ...distractors]).slice(0,3);
+
+    stageEl.innerHTML = `
+      <div class="word">${cur.en}</div>
+      <div class="sub">這個單字是什麼意思？</div>
+      ${options.map(o=>`<button class="btn choice" onclick="onChoice('${escapeHtml(o)}')">${escapeHtml(o)}</button>`).join("")}
+      <div class="tinyrow">
+        <button class="tinybtn" onclick="reListen()">🔊 再聽一次</button>
+        <button class="tinybtn" onclick="backToListen()">⬅ 回到「聽」</button>
+      </div>
+      <div id="msg" class="msg"></div>
+    `;
+    setMessage(`<span class="muted">提示：先想畫面/情境，再選</span>`);
+    return;
+  }
+
+  if(p.stage === "spell"){
+    const en = cur.en;
+    const letters = makeLetterBank(en);
+    const typedDisplay = p.typed || "_".repeat(en.length);
+
+    stageEl.innerHTML = `
+      <div class="word">${typedDisplay}</div>
+      <div class="sub">請拼出剛剛聽到的單字</div>
+
+      <div class="row">
+        ${letters.map(ch=>`<button class="chip" onclick="addLetter('${escapeHtml(ch)}')">${escapeHtml(ch)}</button>`).join("")}
+      </div>
+
+      <div class="tinyrow">
+        <button class="tinybtn" onclick="backspace()">⌫ 退格</button>
+        <button class="tinybtn" onclick="clearTyped()">🧹 清空</button>
+        <button class="tinybtn" onclick="reListen()">🔊 再聽一次</button>
+      </div>
+
+      <button class="btn primary" onclick="checkSpell()">確認</button>
+      <div class="hint">提示：第一個字母是 <b>${escapeHtml(en[0])}</b></div>
+      <div id="msg" class="msg"></div>
+    `;
+    setMessage(`<span class="muted">拼對就過關！</span>`);
+    return;
+  }
+
+  if(p.stage === "summary"){
+    const hist = state.stats.history[p.level] || {stars:p.starsThisLevel, wrong:p.wrongThisLevel};
+    const wrong = hist.wrong || [];
+    const wrongList = wrong.length
+      ? `<div class="left"><div class="k">❌ 本關錯題</div>${wrong.map(x=>`<div class="muted">- ${escapeHtml(x.en)}（${x.at==="choice"?"選中文":"拼字"}）</div>`).join("")}</div>`
+      : `<div class="ok">本關全對！</div>`;
+
+    stageEl.innerHTML = `
+      <h2 style="margin:6px 0 10px;">🎉 第 ${p.level} 關完成！</h2>
+      <div class="pill" style="display:inline-block;">⭐ 正確 ${hist.stars}/10</div>
+      <div class="divider"></div>
+      ${wrongList}
+      <div class="divider"></div>
+      <button class="btn primary" onclick="nextLevel()">➡ 下一關</button>
+      <button class="btn secondary" onclick="openTeacher()">👩‍🏫 看老師後台</button>
+    `;
+    return;
+  }
+}
+
+/* ========= actions ========= */
+function onListen(){
+  const p = state.progress;
+  const cur = p.current;
+  // 記一次 listen 錯誤不算，這邊只當「有按過聽」
+  p.listened = true;
+  saveAll();
+  speak(cur.en);
+  render();
+}
+
+function toChoice(){
+  if(!state.progress.listened) return;
+  goStage("choice");
+}
+
+function backToListen(){
+  goStage("listen");
+}
+
+function reListen(){
+  const cur = state.progress.current;
+  speak(cur.en);
+}
+
+function pickDistractors(correctZh, n){
+  const pool = WORDS.map(w=>w.zh).filter(z=>z!==correctZh);
+  // 去重
+  const uniq = [...new Set(pool)];
+  return shuffle(uniq).slice(0,n);
+}
+
+function onChoice(optZh){
+  const p = state.progress;
+  const cur = p.current;
+  const ws = ensureWordStat(cur.en);
+  p.tries.choice += 1;
+
+  if(optZh === cur.zh){
+    // first-try 才給星
+    if(p.tries.choice === 1) p.starsThisLevel += 1;
+    ws.correct += 1;
+    saveAll();
+    goStage("spell");
+  }else{
+    ws.choice += 1;
+    // 本關錯題記錄（避免重複塞同一字同一階段）
+    addWrongOnce(cur.en, "choice");
+    saveAll();
+    setMessage(`<span class="bad">不對喔～</span> 再想想（可按 🔊 再聽一次）`);
+  }
+}
+
+function makeLetterBank(en){
+  // 基本：全字母 + 2 個干擾字母（從常見字母取）
+  const extras = "aeiourstnlpm".split("");
+  const add = [];
+  while(add.length < 2){
+    const c = extras[Math.floor(Math.random()*extras.length)];
+    if(!en.includes(c)) add.push(c);
+  }
+  return shuffle(en.split("").concat(add)).slice(0, en.length+2);
+}
+
+function addLetter(ch){
+  const p = state.progress;
+  const en = p.current.en;
+  if(p.typed.length >= en.length) return;
+  p.typed += ch;
+  saveAll();
+  render();
+}
+
+function backspace(){
+  const p = state.progress;
+  p.typed = p.typed.slice(0,-1);
+  saveAll();
+  render();
+}
+function clearTyped(){
+  state.progress.typed = "";
+  saveAll();
+  render();
+}
+
+function checkSpell(){
+  const p = state.progress;
+  const cur = p.current;
+  const ws = ensureWordStat(cur.en);
+  p.tries.spell += 1;
+
+  if(p.typed.toLowerCase() === cur.en.toLowerCase()){
+    // first-try 才加星（拼字星）
+    if(p.tries.spell === 1) p.starsThisLevel += 1;
+    ws.correct += 1;
+    saveAll();
+    setMessage(`<span class="ok">✔ 拼對了！</span>`);
+    // 稍微延遲讓小孩看到成功
+    setTimeout(()=>nextQuestion(), 450);
+  }else{
+    ws.spell += 1;
+    addWrongOnce(cur.en, "spell");
+    saveAll();
+    setMessage(`<span class="bad">差一點～</span> 再試一次（可先按 🔊 再聽一次）`);
+  }
+}
+
+function addWrongOnce(en, at){
+  const p = state.progress;
+  p.wrongThisLevel = Array.isArray(p.wrongThisLevel) ? p.wrongThisLevel : [];
+  if(!p.wrongThisLevel.some(x=>x.en===en && x.at===at)){
+    p.wrongThisLevel.push({en, at});
+  }
+}
+
+/* ========= teacher dashboard ========= */
+function openTeacher(){
+  const ws = state.stats.wordStats || {};
+  const entries = Object.keys(ws).map(en=>{
+    const s = ws[en];
+    return {en, listen:s.listen||0, choice:s.choice||0, spell:s.spell||0, seen:s.seen||0, correct:s.correct||0, err:(s.choice||0)+(s.spell||0)};
+  }).sort((a,b)=>b.err-a.err || b.seen-a.seen);
+
+  const doneLevels = Object.keys(state.stats.history||{}).length;
+  const p = state.progress;
+
+  const top10 = entries.filter(x=>x.err>0).slice(0,10);
+
+  stageEl.innerHTML = `
+    <div class="left">
+      <h2 style="margin:6px 0 8px;">👩‍🏫 老師後台</h2>
+      <div class="pill">進度：第 ${p.level} 關（${p.q}/${PER_LEVEL}）</div>
+      <div class="pill" style="margin-left:6px;">已完成關卡：${doneLevels}/${TOTAL_LEVELS}</div>
+
+      <div class="divider"></div>
+
+      <div class="k">📌 最常錯 Top 10</div>
+      ${top10.length ? `
+        <table class="table">
+          <thead><tr><th>單字</th><th>選錯</th><th>拼錯</th><th>總錯</th></tr></thead>
+          <tbody>
+            ${top10.map(x=>`<tr><td class="k">${escapeHtml(x.en)}</td><td>${x.choice}</td><td>${x.spell}</td><td><b>${x.err}</b></td></tr>`).join("")}
+          </tbody>
+        </table>
+      ` : `<div class="muted">目前沒有錯誤紀錄。</div>`}
+
+      <div class="divider"></div>
+
+      <div class="k">📊 全部單字統計（依錯誤排序）</div>
+      <table class="table">
+        <thead><tr><th>單字</th><th>看過</th><th>選錯</th><th>拼錯</th><th>總錯</th></tr></thead>
+        <tbody>
+          ${entries.slice(0,50).map(x=>`
+            <tr>
+              <td class="k">${escapeHtml(x.en)}</td>
+              <td>${x.seen}</td>
+              <td>${x.choice}</td>
+              <td>${x.spell}</td>
+              <td><b>${x.err}</b></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+
+      <div class="divider"></div>
+
+      <button class="btn secondary" onclick="render()">⬅ 回到遊戲</button>
+      <button class="btn secondary" onclick="resetAll()">🧹 清除進度/統計（重新開始）</button>
+    </div>
+  `;
+}
+
+function resetAll(){
+  if(!confirm("確定要清除進度與統計嗎？（會全部重來）")) return;
+  localStorage.removeItem(K_PROGRESS);
+  localStorage.removeItem(K_STATS);
+  state = loadAll();
+  render();
+}
+
+/* ========= misc ========= */
+function escapeHtml(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/* ========= start ========= */
 render();
 </script>
 </body>
