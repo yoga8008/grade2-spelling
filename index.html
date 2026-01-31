@@ -438,18 +438,35 @@ function maxUnlocked(stu){
    5) Speech (TTS)
    =========================== */
 function speakEN(word){
-  // Use Web Speech API. On iOS Safari, must be triggered by a user click.
-  return new Promise((resolve,reject)=>{
-    try{
-      const u = new SpeechSynthesisUtterance(word);
-      u.lang = "en-US";
-      u.rate = 0.92;
-      u.onend = ()=>resolve();
-      u.onerror = ()=>resolve(); // don't block
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-    }catch(e){ resolve(); }
-  });
+  const voices = speechSynthesis.getVoices();
+
+  // 優先選擇清楚的美式女聲（iOS 最佳是 Samantha）
+  const voice =
+    voices.find(v => v.lang === "en-US" && v.name.includes("Samantha")) ||
+    voices.find(v => v.lang === "en-US" && /female|woman/i.test(v.name)) ||
+    voices.find(v => v.lang === "en-US") ||
+    voices[0];
+
+  // 第一次：慢速、很清楚
+  const slow = new SpeechSynthesisUtterance(word);
+  slow.voice = voice;
+  slow.lang = "en-US";
+  slow.rate = 0.65;   // ⭐ 關鍵：慢
+  slow.pitch = 1.0;
+  slow.volume = 1.0;
+
+  // 第二次：接近正常速度，幫助銜接
+  const normal = new SpeechSynthesisUtterance(word);
+  normal.voice = voice;
+  normal.lang = "en-US";
+  normal.rate = 0.9;
+  normal.pitch = 1.0;
+  normal.volume = 1.0;
+
+  // 播放
+  speechSynthesis.cancel();
+  speechSynthesis.speak(slow);
+  speechSynthesis.speak(normal);
 }
 
 /* ===========================
