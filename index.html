@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>二年級拼字口說遊戲（153字）</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7ff;text-align:center}
+.card{background:#fff;width:360px;margin:20px auto;padding:20px;border-radius:20px;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+button{padding:10px;margin:6px;border:none;border-radius:12px;font-size:16px}
+.choice{width:100%;background:#e8eeff}
+.small{font-size:14px;color:#555}
+</style>
+</head>
+
+<body>
+<div class="card">
+<h2>🦊 拼字小狐狸（口說）</h2>
+<p class="small">🔊 聽 → 🎤 說 → 選中文</p>
+
+<button onclick="speak()">🔊 聽單字</button>
+<button onclick="startSpeech()">🎤 開始說話</button>
+
+<p id="speech"></p>
+<div id="choices"></div>
+<p id="result"></p>
+</div>
+
+<script>
+const words=[
+{en:"able",zh:"能夠"},{en:"all",zh:"所有"},{en:"after",zh:"在…之後"},
+{en:"and",zh:"和"},{en:"any",zh:"任何"},{en:"ant",zh:"螞蟻"},
+{en:"apple",zh:"蘋果"},{en:"April",zh:"四月"},{en:"ask",zh:"問"},
+{en:"book",zh:"書"},{en:"ball",zh:"球"},{en:"basket",zh:"籃子"},
+{en:"banana",zh:"香蕉"},{en:"bank",zh:"銀行"},{en:"bath",zh:"洗澡"},
+{en:"bat",zh:"球棒;蝙蝠"},{en:"beach",zh:"海灘"},{en:"become",zh:"成為"},
+{en:"bed",zh:"床"},{en:"bee",zh:"蜜蜂"},{en:"bite",zh:"咬"},
+{en:"bicycle",zh:"腳踏車"},{en:"bird",zh:"鳥"},
+{en:"black",zh:"黑色"},{en:"blue",zh:"藍色"},
+{en:"boat",zh:"船"},{en:"box",zh:"盒子"},
+{en:"boy",zh:"男孩"},{en:"bread",zh:"麵包"},
+{en:"break",zh:"斷裂；暫停"},{en:"brother",zh:"兄弟"},
+{en:"cake",zh:"蛋糕"},{en:"cap",zh:"棒球帽"},
+{en:"camp",zh:"營地；帳篷"},{en:"card",zh:"卡片"},
+{en:"candy",zh:"糖果"},{en:"care",zh:"關懷；照顧"},
+{en:"catch",zh:"抓"},{en:"chair",zh:"椅子"},
+{en:"chalk",zh:"粉筆"},{en:"check",zh:"打勾；確認"},
+{en:"cool",zh:"涼爽的;酷"},{en:"child",zh:"小孩"},
+{en:"circle",zh:"圓"},{en:"coffee",zh:"咖啡"},
+{en:"cup",zh:"杯子"},{en:"cute",zh:"可愛的"},
+{en:"dark",zh:"黑暗的"},{en:"dance",zh:"跳舞"},
+{en:"dear",zh:"親愛的"},{en:"desk",zh:"桌子"},
+{en:"doctor",zh:"醫生"},{en:"dirty",zh:"髒的"},
+{en:"doll",zh:"娃娃"},{en:"dinner",zh:"晚餐"},
+{en:"duck",zh:"鴨子"},{en:"early",zh:"早的"},
+{en:"ear",zh:"耳朵"},{en:"egg",zh:"蛋"},
+{en:"elf",zh:"精靈"},{en:"elephant",zh:"大象"},
+{en:"eraser",zh:"橡皮擦"},{en:"fact",zh:"事實"},
+{en:"famous",zh:"有名的"},{en:"fast",zh:"快速"},
+{en:"father",zh:"爸爸"},{en:"fin",zh:"魚鰭"},
+{en:"feel",zh:"感覺"},{en:"find",zh:"尋找"},
+{en:"first",zh:"第一"},{en:"fix",zh:"修理"},
+{en:"flower",zh:"花"},{en:"food",zh:"食物"},
+{en:"forget",zh:"忘記"},{en:"fork",zh:"叉子"},
+{en:"gas",zh:"瓦斯"},{en:"girl",zh:"女孩"},
+{en:"game",zh:"遊戲"},{en:"goat",zh:"山羊"},
+{en:"green",zh:"綠色"},{en:"garden",zh:"花園"},
+{en:"give",zh:"給予"},{en:"hat",zh:"帽子"},
+{en:"ham",zh:"火腿"},{en:"hand",zh:"手"},
+{en:"happy",zh:"快樂的"},{en:"hair",zh:"頭髮"},
+{en:"hard",zh:"困難"},{en:"hear",zh:"聽"},
+{en:"heart",zh:"心臟"},{en:"heat",zh:"發熱"},
+{en:"help",zh:"幫助"},{en:"in",zh:"在…裡面"},
+{en:"ice",zh:"冰"},{en:"igloo",zh:"冰屋"},
+{en:"jam",zh:"果醬"},{en:"jacket",zh:"夾克"},
+{en:"job",zh:"工作"},{en:"jump",zh:"跳"},
+{en:"kiss",zh:"親吻"},{en:"kite",zh:"風箏"},
+{en:"key",zh:"鑰匙"},{en:"knee",zh:"膝蓋"},
+{en:"lips",zh:"嘴唇"},{en:"land",zh:"土地"},
+{en:"lamp",zh:"燈"},{en:"lazy",zh:"懶惰"},
+{en:"leg",zh:"腿"},{en:"mask",zh:"面具"},
+{en:"map",zh:"地圖"},{en:"mail",zh:"郵件"},
+{en:"marker",zh:"彩色筆"},{en:"meat",zh:"肉"},
+{en:"moon",zh:"月亮"},{en:"mother",zh:"媽媽"},
+{en:"near",zh:"靠近"},{en:"neck",zh:"脖子"},
+{en:"need",zh:"需要"},{en:"news",zh:"新聞"},
+{en:"noon",zh:"中午"},{en:"nose",zh:"鼻子"},
+{en:"oil",zh:"油"},{en:"old",zh:"老的；舊的"},
+{en:"only",zh:"唯一"},{en:"page",zh:"頁數"},
+{en:"pet",zh:"寵物"},{en:"pencil",zh:"鉛筆"},
+{en:"pizza",zh:"比薩"},{en:"pot",zh:"鍋子"},
+{en:"pillow",zh:"枕頭"},{en:"queen",zh:"皇后"},
+{en:"question",zh:"問題"},{en:"quick",zh:"快的"},
+{en:"rat",zh:"鼠"},{en:"rain",zh:"雨"},
+{en:"red",zh:"紅色"},{en:"robot",zh:"機器人"},
+{en:"ruler",zh:"尺"},{en:"sand",zh:"沙"},
+{en:"same",zh:"相同"},{en:"send",zh:"送"},
+{en:"sew",zh:"縫補"},{en:"sing",zh:"唱歌"},
+{en:"sister",zh:"姐妹"},{en:"seven",zh:"7"},
+{en:"table",zh:"桌子"},{en:"talk",zh:"說話"},
+{en:"thank",zh:"感謝"},{en:"three",zh:"3"},
+{en:"teacher",zh:"老師"},{en:"tree",zh:"樹"},
+{en:"tub",zh:"浴缸"},{en:"turtle",zh:"烏龜"},
+{en:"up",zh:"上面"},{en:"yellow",zh:"黃色"}
+];
+
+let current;
+
+function newQ(){
+current=words[Math.floor(Math.random()*words.length)];
+document.getElementById("speech").innerText="";
+document.getElementById("result").innerText="";
+let opts=[...words].sort(()=>0.5-Math.random()).slice(0,3);
+if(!opts.includes(current))opts[0]=current;
+opts.sort(()=>0.5-Math.random());
+let box=document.getElementById("choices");
+box.innerHTML="";
+opts.forEach(o=>{
+let b=document.createElement("button");
+b.className="choice";
+b.innerText=o.zh;
+b.onclick=()=>check(o);
+box.appendChild(b);
+});
+}
+
+function speak(){
+let u=new SpeechSynthesisUtterance(current.en);
+u.lang="en-US";
+speechSynthesis.speak(u);
+}
+
+function startSpeech(){
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){alert("此瀏覽器不支援口說");return;}
+let r=new SR();
+r.lang="en-US";
+r.start();
+r.onresult=e=>{
+let t=e.results[0][0].transcript.toLowerCase();
+document.getElementById("speech").innerHTML="🗣️ 你說的是：<b>"+t+"</b>";
+};
+}
+
+function check(o){
+document.getElementById("result").innerText=
+o===current?"✅ 正確！":"❌ 正確是："+current.zh;
+setTimeout(newQ,1500);
+}
+
+newQ();
+</script>
+</body>
+</html>
