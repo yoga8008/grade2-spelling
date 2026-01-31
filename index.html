@@ -1,32 +1,35 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>二年級拼字口說遊戲（153字）</title>
+<title>🦊 拼字小狐狸｜100關混合模式</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{font-family:Arial,sans-serif;background:#f4f7ff;text-align:center}
-.card{background:#fff;width:360px;margin:20px auto;padding:20px;border-radius:20px;box-shadow:0 6px 16px rgba(0,0,0,.15)}
-button{padding:10px;margin:6px;border:none;border-radius:12px;font-size:16px}
-.choice{width:100%;background:#e8eeff}
-.small{font-size:14px;color:#555}
+body{font-family:-apple-system,BlinkMacSystemFont;background:#f5f7fb;padding:20px}
+.card{background:#fff;max-width:480px;margin:auto;border-radius:16px;
+padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);text-align:center}
+h1{font-size:20px}
+.word{font-size:32px;font-weight:bold;margin:12px 0}
+.btn{width:100%;padding:12px;margin:6px 0;border:none;border-radius:10px;font-size:16px}
+.primary{background:#4f7cff;color:#fff}
+.secondary{background:#e9ecf3}
+.choice{background:#f0f3ff}
+.hint{font-size:14px;color:#666}
+small{color:#555}
 </style>
 </head>
-
 <body>
+
 <div class="card">
-<h2>🦊 拼字小狐狸（口說）</h2>
-<p class="small">🔊 聽 → 🎤 說 → 選中文</p>
-
-<button onclick="speak()">🔊 聽單字</button>
-<button onclick="startSpeech()">🎤 開始說話</button>
-
-<p id="speech"></p>
-<div id="choices"></div>
-<p id="result"></p>
+<h1>🦊 拼字小狐狸</h1>
+<div id="info"></div>
+<div id="stage"></div>
+<button class="btn secondary" onclick="showTeacher()">👩‍🏫 老師後台</button>
 </div>
 
 <script>
-const words=[
+// ===== 單字（153）=====
+const words = [
 {en:"able",zh:"能夠"},{en:"all",zh:"所有"},{en:"after",zh:"在…之後"},
 {en:"and",zh:"和"},{en:"any",zh:"任何"},{en:"ant",zh:"螞蟻"},
 {en:"apple",zh:"蘋果"},{en:"April",zh:"四月"},{en:"ask",zh:"問"},
@@ -103,51 +106,100 @@ const words=[
 {en:"up",zh:"上面"},{en:"yellow",zh:"黃色"}
 ];
 
-let current;
+// ===== 關卡設定（已照你需求）=====
+const PER_LEVEL = 10;   // 每關 10 個字
+const TOTAL_LEVELS = 100;
 
-function newQ(){
-current=words[Math.floor(Math.random()*words.length)];
-document.getElementById("speech").innerText="";
-document.getElementById("result").innerText="";
-let opts=[...words].sort(()=>0.5-Math.random()).slice(0,3);
-if(!opts.includes(current))opts[0]=current;
-opts.sort(()=>0.5-Math.random());
-let box=document.getElementById("choices");
-box.innerHTML="";
-opts.forEach(o=>{
-let b=document.createElement("button");
-b.className="choice";
-b.innerText=o.zh;
-b.onclick=()=>check(o);
-box.appendChild(b);
-});
+// ===== 進度 & 錯誤 =====
+let progress = JSON.parse(localStorage.getItem("progress")) || {i:0,mode:0,build:""};
+let errors = JSON.parse(localStorage.getItem("errors")) || {};
+function save(){
+  localStorage.setItem("progress",JSON.stringify(progress));
+  localStorage.setItem("errors",JSON.stringify(errors));
 }
 
-function speak(){
-let u=new SpeechSynthesisUtterance(current.en);
-u.lang="en-US";
-speechSynthesis.speak(u);
+// ===== 工具 =====
+function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u);}
+function logError(type){
+  const w=words[progress.i].en;
+  errors[w]=errors[w]||{speak:0,choice:0,spell:0};
+  errors[w][type]++; save();
+}
+
+// ===== UI =====
+const stage=document.getElementById("stage");
+const info=document.getElementById("info");
+
+function render(){
+  const level=Math.floor(progress.i/PER_LEVEL)+1;
+  info.innerHTML=`🎯 第 ${level} 關（${progress.i%PER_LEVEL+1}/${PER_LEVEL}）`;
+  const w=words[progress.i];
+
+  if(progress.mode===0){
+    stage.innerHTML=`
+      <div class="word">${w.en}</div>
+      <button class="btn secondary" onclick="speak('${w.en}')">🔊 聽</button>
+      <button class="btn primary" onclick="startSpeech()">🎤 說</button>
+      <small>請唸英文</small>`;
+  }
+
+  if(progress.mode===1){
+    const opts=shuffle([w.zh,...shuffle(words).slice(0,2).map(x=>x.zh)]);
+    stage.innerHTML=`
+      <div class="word">${w.en}</div>
+      ${opts.map(o=>`<button class="btn choice" onclick="checkChoice('${o}')">${o}</button>`).join("")}`;
+  }
+
+  if(progress.mode===2){
+    progress.build="";
+    const letters=shuffle(w.en.split(""));
+    stage.innerHTML=`
+      <div class="word">${"_".repeat(w.en.length)}</div>
+      ${letters.map(l=>`<button class="btn secondary" onclick="addLetter('${l}')">${l}</button>`).join("")}
+      <button class="btn primary" onclick="checkSpell()">確認</button>
+      <div class="hint">提示：${w.en[0]}...</div>`;
+  }
+}
+
+// ===== 行為 =====
+function next(){
+  progress.mode=(progress.mode+1)%3;
+  if(progress.mode===0) progress.i++;
+  save();
+  if(progress.i>=words.length){
+    stage.innerHTML="<h2>🎉 全部完成！</h2>";
+    return;
+  }
+  render();
 }
 
 function startSpeech(){
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(!SR){alert("此瀏覽器不支援口說");return;}
-let r=new SR();
-r.lang="en-US";
-r.start();
-r.onresult=e=>{
-let t=e.results[0][0].transcript.toLowerCase();
-document.getElementById("speech").innerHTML="🗣️ 你說的是：<b>"+t+"</b>";
-};
+  const r=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+  r.lang="en-US";r.start();
+  r.onresult=e=>{
+    if(e.results[0][0].transcript.toLowerCase().trim()===words[progress.i].en){
+      next();
+    }else{logError("speak");alert("再試一次");}
+  };
+}
+function checkChoice(o){ o===words[progress.i].zh ? next() : (logError("choice"),alert("再想想")); }
+function addLetter(l){ progress.build+=l; document.querySelector(".word").innerText=progress.build; }
+function checkSpell(){ progress.build===words[progress.i].en ? next() : (logError("spell"),alert("差一點")); }
+
+// ===== 老師後台 =====
+function showTeacher(){
+  let html="<h3>👩‍🏫 錯誤統計</h3>";
+  if(!Object.keys(errors).length){stage.innerHTML="<p>目前沒有錯誤紀錄</p>";return;}
+  for(const w in errors){
+    const e=errors[w];
+    html+=`<p>${w}｜🎤${e.speak} 🟦${e.choice} 🔤${e.spell}</p>`;
+  }
+  stage.innerHTML=html;
 }
 
-function check(o){
-document.getElementById("result").innerText=
-o===current?"✅ 正確！":"❌ 正確是："+current.zh;
-setTimeout(newQ,1500);
-}
-
-newQ();
+// ===== 啟動 =====
+render();
 </script>
 </body>
 </html>
