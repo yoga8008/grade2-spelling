@@ -1,274 +1,1697 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>南門國小拼字挑戰 Go</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <title>南門國小拼字挑戰 Go</title>
+  <style>
+    :root{
+      --bg1:#f7fbff; --bg2:#eef4ff;
+      --card:#ffffffcc; --card2:#fff;
+      --text:#0f172a; --muted:#64748b;
+      --primary:#2563eb; --primary2:#1d4ed8;
+      --good:#16a34a; --bad:#ef4444; --warn:#f59e0b;
+      --shadow: 0 14px 34px rgba(2,6,23,.10);
+      --radius: 22px;
+      --chip:#e7efff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 18% 10%, #ffffff, transparent 62%),
+        radial-gradient(900px 600px at 92% 28%, #dbeafe, transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+    }
+    .wrap{max-width:1050px;margin:0 auto;padding:16px 14px 42px;}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin:6px 0 12px;
+    }
+    .brand{display:flex; align-items:center; gap:10px;}
+    .logo{
+      width:46px;height:46px;border-radius:16px;
+      background: linear-gradient(135deg, #60a5fa, #22c55e);
+      display:grid;place-items:center;color:#fff;
+      box-shadow: var(--shadow);
+      font-size:22px;
+    }
+    .title{line-height:1.1}
+    .title h1{margin:0;font-size:20px;}
+    .title p{margin:3px 0 0;color:var(--muted);font-size:12px;font-weight:800}
+    .topbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 
-<style>
-:root{
-  --primary:#4f7cff;
-  --bg:#f3f6ff;
-  --card:#ffffff;
-  --ok:#22c55e;
-  --bad:#ef4444;
-}
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;}
-body{margin:0;background:var(--bg);}
-.hidden{display:none}
-header{
-  padding:12px 16px;
-  background:#fff;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.08)
-}
-header h1{font-size:18px;margin:0}
-button{
-  border:none;
-  background:var(--primary);
-  color:#fff;
-  padding:10px 16px;
-  border-radius:12px;
-  font-size:16px;
-}
-button.gray{background:#cbd5e1;color:#111}
-button.ok{background:var(--ok)}
-button.bad{background:var(--bad)}
-main{padding:16px}
-.card{
-  background:var(--card);
-  border-radius:18px;
-  padding:16px;
-  margin-bottom:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,.08)
-}
-.map{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:14px;
-}
-.level{
-  background:#e0e7ff;
-  padding:18px;
-  border-radius:16px;
-  text-align:center;
-  font-weight:700;
-}
-.level.done{background:#bbf7d0}
-.level.lock{opacity:.4}
-.choice{
-  padding:14px;
-  border-radius:14px;
-  background:#eef2ff;
-  margin:8px 0;
-  text-align:center;
-  font-size:20px;
-}
-.progress{
-  height:10px;
-  background:#e5e7eb;
-  border-radius:999px;
-  overflow:hidden;
-}
-.progress div{
-  height:100%;
-  background:var(--ok);
-}
-input[type=text]{width:100%;padding:12px;font-size:16px;border-radius:12px;border:1px solid #ddd}
-.range{width:100%}
-</style>
+    button{
+      border:0;border-radius:14px;
+      padding:10px 12px;
+      background:#fff;color:var(--text);
+      box-shadow: 0 12px 26px rgba(2,6,23,.08);
+      cursor:pointer;font-weight:900;
+    }
+    button.primary{background: linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff;}
+    button.ghost{background:#ffffffbb}
+    button.small{padding:8px 10px;border-radius:12px}
+    button:disabled{opacity:.45; cursor:not-allowed}
+
+    .grid{display:grid; gap:12px;}
+    @media(min-width:900px){ .grid.cols2{grid-template-columns: 1.1fr .9fr;} }
+
+    .card{
+      background: var(--card);
+      border:1px solid rgba(15,23,42,.06);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding:16px;
+      backdrop-filter: blur(8px);
+    }
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .muted{color:var(--muted)}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;
+      background:#fff;border:1px solid rgba(15,23,42,.08);
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      font-weight:900;
+    }
+    .chip{
+      background: var(--chip);
+      padding:7px 10px;border-radius:999px;
+      border:1px solid rgba(37,99,235,.14);
+      font-weight:1000;
+      display:inline-flex;gap:8px;align-items:center;
+    }
+    .chip b{font-weight:1000}
+    .input{
+      width:min(360px, 92vw);
+      padding:12px;border-radius:14px;
+      border:1px solid rgba(15,23,42,.12);
+      background:#fff;
+      font-size:16px; outline:none;
+      font-weight:800;
+    }
+
+    .kpi{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;}
+    @media(max-width:900px){ .kpi{grid-template-columns: repeat(2, 1fr);} }
+    .k{
+      background:#fff;border:1px solid rgba(15,23,42,.08);
+      border-radius:18px;padding:10px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+    }
+    .k .v{font-size:18px;font-weight:1000}
+    .k .l{font-size:12px;color:var(--muted);font-weight:900}
+
+    .progressbar{
+      height:10px;width:100%;
+      background: rgba(15,23,42,.08);
+      border-radius:999px;overflow:hidden;
+    }
+    .progressbar > div{
+      height:100%; width:0%;
+      background: linear-gradient(90deg, #22c55e, #60a5fa);
+      border-radius:999px;
+      transition: width .25s ease;
+    }
+
+    /* badges */
+    .badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .badge{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:18px;
+      padding:10px 12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      display:flex; gap:10px; align-items:center;
+      min-width: 220px;
+    }
+    .badge .ico{font-size:22px}
+    .badge .t{font-weight:1000}
+    .badge .d{font-size:12px;color:var(--muted);font-weight:900;margin-top:2px}
+    .badge.lock{opacity:.45; filter:grayscale(.35)}
+    .badge.unlocked{outline:4px solid rgba(34,197,94,.18)}
+
+    /* map */
+    .map{
+      position:relative;
+      overflow:hidden;
+      border-radius: var(--radius);
+      border:1px solid rgba(15,23,42,.06);
+      background: linear-gradient(180deg, #ffffffcc, #f8fbffcc);
+      box-shadow: var(--shadow);
+      min-height: 540px;
+    }
+    .mapInner{
+      height: 540px;
+      overflow:auto;
+      padding:16px 14px 26px;
+      scroll-behavior:smooth;
+    }
+    .path{
+      position:relative;
+      width:100%;
+      min-height: 1700px;
+      padding-bottom: 40px;
+    }
+    .node{
+      position:absolute;
+      width:74px; height:74px;
+      border-radius: 24px;
+      display:grid; place-items:center;
+      font-weight:1000;
+      user-select:none;
+      border:1px solid rgba(15,23,42,.10);
+      box-shadow: 0 14px 24px rgba(2,6,23,.10);
+      background:#fff;
+    }
+    .node .n{font-size:13px}
+    .node .i{font-size:21px; line-height:1}
+    .node.locked{opacity:.42; filter:grayscale(.35)}
+    .node.passed{
+      background: linear-gradient(180deg, #dcfce7, #bbf7d0);
+      border-color: rgba(22,163,74,.25);
+    }
+    .node.current{outline:4px solid rgba(37,99,235,.20)}
+    .node:active{transform: translateY(1px)}
+
+    /* game */
+    #screenGame{display:none}
+    .gameHeader{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;
+    }
+    .modeTag{
+      display:inline-flex; gap:8px; align-items:center; justify-content:center;
+      padding:8px 12px; border-radius:999px; background:#fff;
+      border:1px solid rgba(15,23,42,.08); font-weight:1000;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+    }
+    .barRow{display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:10px}
+    .range{width:min(260px, 86vw)}
+    .bigTitle{
+      text-align:center;
+      font-size:26px;
+      font-weight:1000;
+      margin:12px 0 6px;
+    }
+    .sub{
+      text-align:center;
+      color:var(--muted);
+      font-weight:900;
+      margin:0 0 12px;
+    }
+    .choices{display:grid; gap:10px}
+    @media(min-width:620px){ .choices.grid2{grid-template-columns:1fr 1fr;} }
+    .choice{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      padding:14px 14px;
+      border-radius: 18px;
+      font-size:20px; font-weight:1000;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      cursor:pointer;
+      text-align:center;
+      user-select:none;
+    }
+    .choice:hover{transform: translateY(-1px)}
+    .choice.correct{border-color: rgba(22,163,74,.35); background: #dcfce7;}
+    .choice.wrong{border-color: rgba(239,68,68,.35); background: #fee2e2;}
+
+    .status{
+      text-align:center;
+      font-weight:1000;
+      margin-top:8px;
+      min-height: 26px;
+    }
+    .status.good{color:var(--good)}
+    .status.bad{color:var(--bad)}
+    .reveal{
+      margin-top:6px;
+      text-align:center;
+      font-weight:1000;
+      color:var(--muted);
+      min-height:22px;
+    }
+    .footerBtns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px;}
+
+    /* matching mini */
+    .matchWrap{display:grid; gap:10px; margin-top:10px}
+    .matchGrid{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .tile{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:18px;
+      padding:14px 12px;
+      font-weight:1000;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      cursor:pointer;
+      min-height:54px;
+      display:flex; align-items:center; justify-content:center;
+      text-align:center;
+      user-select:none;
+    }
+    .tile.sel{outline:4px solid rgba(37,99,235,.20)}
+    .tile.done{opacity:.42}
+    .tile.ok{background:#dcfce7; border-color: rgba(22,163,74,.35)}
+    .tile.no{background:#fee2e2; border-color: rgba(239,68,68,.35)}
+
+    /* spell */
+    .spellBox{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:18px;
+      padding:12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+    }
+    .spellInput{
+      width:min(360px, 92vw);
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(15,23,42,.12);
+      font-size:18px;
+      font-weight:900;
+      outline:none;
+    }
+
+    /* modal teacher */
+    .modal{
+      position:fixed; inset:0;
+      display:none; place-items:center;
+      background: rgba(2,6,23,.55);
+      padding:16px;
+      z-index: 60;
+    }
+    .modal .panel{
+      width:min(1000px, 96vw);
+      max-height: 86vh;
+      overflow:auto;
+      background:#fff;
+      border-radius: 22px;
+      box-shadow: 0 28px 70px rgba(2,6,23,.25);
+      padding:16px;
+    }
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th,td{border-bottom:1px solid rgba(15,23,42,.08); padding:8px; text-align:left; vertical-align:top}
+    th{background:#f8fafc}
+    .right{text-align:right}
+    .note{font-size:12px; color:var(--muted); font-weight:800; line-height:1.5}
+
+    /* FX canvas */
+    #fx{position:fixed; inset:0; pointer-events:none; z-index: 50;}
+  </style>
 </head>
 
 <body>
+<canvas id="fx"></canvas>
 
-<header>
-  <h1>🏫 南門國小拼字挑戰 Go</h1>
-  <div>
-    <button class="gray" onclick="toggleFull()">全螢幕</button>
-    <button class="gray" onclick="showTeacher()">老師後台</button>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">🏫</div>
+      <div class="title">
+        <h1>南門國小拼字挑戰 Go</h1>
+        <p>完整153單字｜100關地圖｜每關10題｜題型可選 A/B/C/D/全選｜徽章＆連續答對動畫</p>
+      </div>
+    </div>
+    <div class="topbtns">
+      <button class="small ghost" id="btnFullscreen">🖥️ 全螢幕</button>
+      <button class="small" id="btnMap">🗺️ 地圖</button>
+      <button class="small" id="btnTeacher">👩‍🏫 老師後台</button>
+    </div>
+  </header>
+
+  <div id="screenMap" class="grid cols2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <span class="pill">👦 學生登入</span>
+          <span class="chip">目前：<b id="curStudent">未登入</b></span>
+        </div>
+        <div class="row">
+          <button class="small" id="btnSwitch">🔁 切換</button>
+          <button class="small primary" id="btnStartNext">▶️ 開始下一關</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <input class="input" id="studentInput" placeholder="輸入學生姓名（例：小明）" />
+        <button class="primary" id="btnLogin">登入</button>
+      </div>
+
+      <div class="card" style="margin-top:12px; background:#fff">
+        <div class="row" style="justify-content:space-between; align-items:flex-start">
+          <div>
+            <div class="row">
+              <span class="pill">🎯 進度</span>
+              <span class="chip">已通關：<b id="passedCount">0</b>/100</span>
+              <span class="chip">下一關：<b id="nextLevel">1</b></span>
+            </div>
+            <div class="note" style="margin-top:8px">
+              通關門檻：<b id="passRule">8/10</b>（可重玩，取最佳分數）
+            </div>
+          </div>
+          <div style="min-width:260px">
+            <div class="pill">🧩 題型選擇</div>
+            <div class="row" style="margin-top:8px; gap:8px">
+              <label class="chip"><input type="radio" name="modePick" value="ALL" checked> 全選</label>
+              <label class="chip"><input type="radio" name="modePick" value="A"> A</label>
+              <label class="chip"><input type="radio" name="modePick" value="B"> B</label>
+              <label class="chip"><input type="radio" name="modePick" value="C"> C</label>
+              <label class="chip"><input type="radio" name="modePick" value="D"> D</label>
+            </div>
+            <div class="note" style="margin-top:6px">
+              全選：每關10題會包含 A/B/C/D，且四種一定都會出現。
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="progressbar"><div id="overallBar"></div></div>
+      </div>
+
+      <div class="card" style="margin-top:12px; background:#fff">
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <span class="pill">🏅 徽章</span>
+          <span class="chip">已解鎖：<b id="badgeCount">0</b>/4</span>
+        </div>
+        <div class="badges" id="badges"></div>
+      </div>
+
+      <div class="note" style="margin-top:10px">
+        ✅ 同一台裝置可記錄多位學生。<br>
+        ⚠️ GitHub Pages 是靜態網站：不同手機的資料不會自動集中（需要用老師後台匯出CSV/JSON彙整）。
+      </div>
+    </div>
+
+    <div class="map">
+      <div class="mapInner" id="mapInner">
+        <div class="path" id="path"></div>
+      </div>
+    </div>
   </div>
-</header>
 
-<main>
+  <div id="screenGame">
+    <div class="card">
+      <div class="gameHeader">
+        <div class="row">
+          <span class="pill">🎯 第 <b id="gLevel">1</b> 關</span>
+          <span class="chip">第 <b id="gQ">1</b>/10 題</span>
+          <span class="chip">⭐ <b id="gScore">0</b>/10</span>
+          <span class="chip">🔥 連續答對 <b id="gStreak">0</b></span>
+          <span class="chip">⏱️ <b id="gTime">0:00</b></span>
+        </div>
+        <div class="row">
+          <span class="modeTag" id="gModeTag">A</span>
+          <button class="small" id="btnPrevQ">⬅️ 上一題</button>
+          <button class="small" id="btnBackMap">🗺️ 回地圖</button>
+        </div>
+      </div>
 
-<div class="card" id="loginCard">
-  <b>學生登入</b><br><br>
-  <input id="studentName" placeholder="輸入學生姓名">
-  <br><br>
-  <button onclick="login()">登入</button>
+      <div class="barRow">
+        <button id="btnSpeak" class="primary">🔊 播放</button>
+        <span class="pill">🐢➡️🐇 發音速度</span>
+        <input id="rate" class="range" type="range" min="0.7" max="1.2" step="0.05" value="0.95">
+        <span class="chip">x<b id="rateVal">0.95</b></span>
+        <button class="small" id="btnVoice">🎙️ 重新選語音</button>
+      </div>
+
+      <div id="gameBody" style="margin-top:14px"></div>
+      <div class="status" id="status"></div>
+      <div class="reveal" id="reveal"></div>
+
+      <div class="footerBtns">
+        <button id="btnNext" class="primary">➡️ 下一題</button>
+        <button id="btnRetry" class="ghost">🔁 重玩本關</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="card hidden" id="homeCard">
-  👤 目前學生：<b id="who"></b><br><br>
-  進度：<span id="progressTxt"></span>
-  <div class="progress"><div id="progressBar"></div></div><br>
-  規則：每關 10 題，模式隨機 A/B/C/D<br>
-  下一關模式：<b id="nextMode">尚未抽取</b><br><br>
-  <button onclick="startLevel()">開始下一關</button>
+<div class="modal" id="teacherModal">
+  <div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <span class="pill">👩‍🏫 老師後台</span>
+        <span class="chip">裝置內學生數：<b id="stuCount">0</b></span>
+      </div>
+      <div class="row">
+        <button class="small" id="btnCloseTeacher">✖️ 關閉</button>
+      </div>
+    </div>
+
+    <div class="note" style="margin:10px 0">
+      ✅ 匯出 CSV：Excel 直接開。<br>
+      ✅ 匯出 JSON：彙整用（把不同手機的 JSON 匯入老師這台即可合併）。<br>
+      ⚠️ GitHub Pages 靜態網站不會自動跨手機同步資料。
+    </div>
+
+    <div class="row" style="margin:10px 0; justify-content:space-between">
+      <div class="row">
+        <button class="small primary" id="btnExportCSV">⬇️ 匯出 CSV</button>
+        <button class="small" id="btnExportJSON">⬇️ 匯出 JSON</button>
+        <button class="small" id="btnImportJSON">⬆️ 匯入 JSON</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none">
+      </div>
+      <div class="row">
+        <button class="small" id="btnResetAll">🧹 清空本裝置資料</button>
+      </div>
+    </div>
+
+    <h3 style="margin:12px 0 6px">📊 學生進度一覽</h3>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>學生</th>
+            <th class="right">已通關</th>
+            <th class="right">下一關</th>
+            <th class="right">總挑戰次數</th>
+            <th>最近一次</th>
+          </tr>
+        </thead>
+        <tbody id="tblStudents"></tbody>
+      </table>
+    </div>
+
+    <h3 style="margin:14px 0 6px">❌ 錯題統計（Top 30）</h3>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr><th>單字</th><th>中文</th><th class="right">錯誤次數</th></tr>
+        </thead>
+        <tbody id="tblWrong"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
-
-<div class="card hidden">
-  <b>關卡地圖</b>
-  <div class="map" id="map"></div>
-</div>
-
-<div class="card hidden" id="gameCard"></div>
-
-<div class="card hidden" id="teacherCard">
-  <b>老師後台</b><br><br>
-  <button onclick="exportCSV()">匯出 CSV</button>
-  <button onclick="exportJSON()">匯出 JSON</button>
-  <pre id="teacherData"></pre>
-</div>
-
-</main>
 
 <script>
-/* ========= 題庫（180+，你可再加） ========= */
-const WORDS = [
- ["apple","蘋果"],["book","書"],["red","紅色"],["dog","狗"],["cat","貓"],
- ["egg","蛋"],["rain","雨"],["sun","太陽"],["milk","牛奶"],["fish","魚"],
- ["pen","筆"],["desk","桌子"],["chair","椅子"],["blue","藍色"],
- ["green","綠色"],["yellow","黃色"],["black","黑色"],["white","白色"],
- ["run","跑"],["walk","走"],["jump","跳"],["sleep","睡覺"],
- ["eat","吃"],["drink","喝"],["read","讀"],["write","寫"],
- ["school","學校"],["teacher","老師"],["student","學生"],
- ["happy","開心"],["sad","難過"],["big","大"],["small","小"],
- ["hot","熱"],["cold","冷"],["fast","快"],["slow","慢"]
+/* =======================
+   153完整單字題庫（英→中）
+   ======================= */
+const WORDS = [{"id": 1, "en": "able", "zh": "能夠"}, {"id": 2, "en": "all", "zh": "所有"}, {"id": 3, "en": "after", "zh": "在…之後"}, {"id": 4, "en": "and", "zh": "和"}, {"id": 5, "en": "any", "zh": "任何"}, {"id": 6, "en": "ant", "zh": "螞蟻"}, {"id": 7, "en": "apple", "zh": "蘋果"}, {"id": 8, "en": "April", "zh": "四月"}, {"id": 9, "en": "ask", "zh": "問"}, {"id": 10, "en": "book", "zh": "書"}, {"id": 11, "en": "baby", "zh": "嬰兒"}, {"id": 12, "en": "back", "zh": "背部"}, {"id": 13, "en": "bad", "zh": "壞的"}, {"id": 14, "en": "ball", "zh": "球"}, {"id": 15, "en": "band", "zh": "樂隊"}, {"id": 16, "en": "bar", "zh": "酒吧"}, {"id": 17, "en": "bat", "zh": "蝙蝠;球棒"}, {"id": 18, "en": "beach", "zh": "海灘"}, {"id": 19, "en": "bear", "zh": "熊"}, {"id": 20, "en": "bee", "zh": "蜜蜂"}, {"id": 21, "en": "bite", "zh": "咬"}, {"id": 22, "en": "bicycle", "zh": "腳踏車"}, {"id": 23, "en": "big", "zh": "大的"}, {"id": 24, "en": "bird", "zh": "鳥"}, {"id": 25, "en": "blue", "zh": "藍色"}, {"id": 26, "en": "boat", "zh": "船"}, {"id": 27, "en": "box", "zh": "盒子"}, {"id": 28, "en": "boy", "zh": "男孩"}, {"id": 29, "en": "bread", "zh": "麵包"}, {"id": 30, "en": "break", "zh": "打破;休息"}, {"id": 31, "en": "bus", "zh": "公車"}, {"id": 32, "en": "but", "zh": "但是"}, {"id": 33, "en": "butter", "zh": "奶油"}, {"id": 34, "en": "cake", "zh": "蛋糕"}, {"id": 35, "en": "call", "zh": "打電話"}, {"id": 36, "en": "cap", "zh": "帽子"}, {"id": 37, "en": "cat", "zh": "貓"}, {"id": 38, "en": "chair", "zh": "椅子"}, {"id": 39, "en": "chicken", "zh": "雞"}, {"id": 40, "en": "Chinese", "zh": "中文;中國人"}, {"id": 41, "en": "chopsticks", "zh": "筷子"}, {"id": 42, "en": "cool", "zh": "涼爽的;酷"}, {"id": 43, "en": "cow", "zh": "牛"}, {"id": 44, "en": "cute", "zh": "可愛的"}, {"id": 45, "en": "dad", "zh": "爸爸"}, {"id": 46, "en": "day", "zh": "天"}, {"id": 47, "en": "desk", "zh": "書桌"}, {"id": 48, "en": "did", "zh": "做(過去式)"}, {"id": 49, "en": "do", "zh": "做"}, {"id": 50, "en": "doctor", "zh": "醫生"}, {"id": 51, "en": "dog", "zh": "狗"}, {"id": 52, "en": "doll", "zh": "娃娃"}, {"id": 53, "en": "door", "zh": "門"}, {"id": 54, "en": "down", "zh": "向下"}, {"id": 55, "en": "drink", "zh": "喝"}, {"id": 56, "en": "duck", "zh": "鴨子"}, {"id": 57, "en": "egg", "zh": "蛋"}, {"id": 58, "en": "eight", "zh": "8"}, {"id": 59, "en": "eleven", "zh": "11"}, {"id": 60, "en": "English", "zh": "英文"}, {"id": 61, "en": "erase", "zh": "擦掉"}, {"id": 62, "en": "eraser", "zh": "橡皮擦"}, {"id": 63, "en": "fact", "zh": "事實"}, {"id": 64, "en": "fall", "zh": "秋天;跌倒"}, {"id": 65, "en": "fan", "zh": "電扇;粉絲"}, {"id": 66, "en": "father", "zh": "爸爸"}, {"id": 67, "en": "fin", "zh": "魚鰭"}, {"id": 68, "en": "five", "zh": "5"}, {"id": 69, "en": "flower", "zh": "花"}, {"id": 70, "en": "four", "zh": "4"}, {"id": 71, "en": "friend", "zh": "朋友"}, {"id": 72, "en": "from", "zh": "從…來"}, {"id": 73, "en": "fun", "zh": "有趣的"}, {"id": 74, "en": "game", "zh": "遊戲"}, {"id": 75, "en": "girl", "zh": "女孩"}, {"id": 76, "en": "go", "zh": "去"}, {"id": 77, "en": "good", "zh": "好的"}, {"id": 78, "en": "green", "zh": "綠色"}, {"id": 79, "en": "hat", "zh": "帽子"}, {"id": 80, "en": "have", "zh": "有"}, {"id": 81, "en": "he", "zh": "他"}, {"id": 82, "en": "help", "zh": "幫助"}, {"id": 83, "en": "hot", "zh": "熱的"}, {"id": 84, "en": "how", "zh": "如何"}, {"id": 85, "en": "I", "zh": "我"}, {"id": 86, "en": "in", "zh": "在…裡"}, {"id": 87, "en": "is", "zh": "是"}, {"id": 88, "en": "it", "zh": "它"}, {"id": 89, "en": "jacket", "zh": "外套"}, {"id": 90, "en": "January", "zh": "一月"}, {"id": 91, "en": "jump", "zh": "跳"}, {"id": 92, "en": "kid", "zh": "小孩"}, {"id": 93, "en": "kite", "zh": "風箏"}, {"id": 94, "en": "lake", "zh": "湖"}, {"id": 95, "en": "leg", "zh": "腿"}, {"id": 96, "en": "let", "zh": "讓"}, {"id": 97, "en": "like", "zh": "喜歡;像"}, {"id": 98, "en": "lion", "zh": "獅子"}, {"id": 99, "en": "lips", "zh": "嘴唇"}, {"id": 100, "en": "look", "zh": "看"}, {"id": 101, "en": "love", "zh": "愛"}, {"id": 102, "en": "man", "zh": "男人"}, {"id": 103, "en": "mask", "zh": "面具"}, {"id": 104, "en": "me", "zh": "我(受格)"}, {"id": 105, "en": "milk", "zh": "牛奶"}, {"id": 106, "en": "mom", "zh": "媽媽"}, {"id": 107, "en": "moon", "zh": "月亮"}, {"id": 108, "en": "my", "zh": "我的"}, {"id": 109, "en": "new", "zh": "新的"}, {"id": 110, "en": "nine", "zh": "9"}, {"id": 111, "en": "nose", "zh": "鼻子"}, {"id": 112, "en": "not", "zh": "不"}, {"id": 113, "en": "now", "zh": "現在"}, {"id": 114, "en": "October", "zh": "十月"}, {"id": 115, "en": "of", "zh": "…的"}, {"id": 116, "en": "on", "zh": "在…上"}, {"id": 117, "en": "one", "zh": "1"}, {"id": 118, "en": "open", "zh": "打開"}, {"id": 119, "en": "orange", "zh": "橘子;橘色"}, {"id": 120, "en": "page", "zh": "頁數"}, {"id": 121, "en": "pen", "zh": "筆"}, {"id": 122, "en": "pet", "zh": "寵物"}, {"id": 123, "en": "pig", "zh": "豬"}, {"id": 124, "en": "play", "zh": "玩"}, {"id": 125, "en": "please", "zh": "請"}, {"id": 126, "en": "rain", "zh": "雨"}, {"id": 127, "en": "read", "zh": "讀"}, {"id": 128, "en": "red", "zh": "紅色"}, {"id": 129, "en": "run", "zh": "跑"}, {"id": 130, "en": "sad", "zh": "難過的"}, {"id": 131, "en": "say", "zh": "說"}, {"id": 132, "en": "school", "zh": "學校"}, {"id": 133, "en": "sea", "zh": "海"}, {"id": 134, "en": "see", "zh": "看見"}, {"id": 135, "en": "seven", "zh": "7"}, {"id": 136, "en": "she", "zh": "她"}, {"id": 137, "en": "six", "zh": "6"}, {"id": 138, "en": "sun", "zh": "太陽"}, {"id": 139, "en": "table", "zh": "桌子"}, {"id": 140, "en": "talk", "zh": "說話"}, {"id": 141, "en": "teacher", "zh": "老師"}, {"id": 142, "en": "ten", "zh": "10"}, {"id": 143, "en": "three", "zh": "3"}, {"id": 144, "en": "tiger", "zh": "老虎"}, {"id": 145, "en": "time", "zh": "時間"}, {"id": 146, "en": "to", "zh": "到;去"}, {"id": 147, "en": "two", "zh": "2"}, {"id": 148, "en": "tub", "zh": "浴缸"}, {"id": 149, "en": "turtle", "zh": "烏龜"}, {"id": 150, "en": "tree", "zh": "樹"}, {"id": 151, "en": "up", "zh": "上面"}, {"id": 152, "en": "water", "zh": "水"}, {"id": 153, "en": "yellow", "zh": "黃色"}];
+
+const LEVELS = 100;
+const Q_PER_LEVEL = 10;
+const PASS_SCORE = 8; // 通關門檻
+const LS_KEY = "nmps_spelling_go_final_v1";
+
+let state = loadState();
+let curStudent = state.curStudent || "";
+
+let inLevel = 1;
+let qIndex = 0;
+let score = 0;
+let streak = 0;
+
+let questions = []; // [{mode, word(s), ...}]
+let startTs = 0;
+let timerId = null;
+let canNext = false;
+
+let bestVoice = null;
+
+const TEACHER_PASS = "nmps";
+
+/* ========= DOM ========= */
+const $ = (id)=>document.getElementById(id);
+
+const screenMap = $("screenMap");
+const screenGame = $("screenGame");
+
+const curStudentEl = $("curStudent");
+const passedCountEl = $("passedCount");
+const nextLevelEl = $("nextLevel");
+const overallBar = $("overallBar");
+const mapInner = $("mapInner");
+const pathEl = $("path");
+
+const badgesEl = $("badges");
+const badgeCountEl = $("badgeCount");
+
+const studentInput = $("studentInput");
+const passRule = $("passRule");
+
+const btnLogin = $("btnLogin");
+const btnSwitch = $("btnSwitch");
+const btnStartNext = $("btnStartNext");
+const btnMap = $("btnMap");
+const btnTeacher = $("btnTeacher");
+const btnFullscreen = $("btnFullscreen");
+
+const btnBackMap = $("btnBackMap");
+const btnPrevQ = $("btnPrevQ");
+const btnNext = $("btnNext");
+const btnRetry = $("btnRetry");
+
+const btnSpeak = $("btnSpeak");
+const btnVoice = $("btnVoice");
+
+const rate = $("rate");
+const rateVal = $("rateVal");
+
+const gLevel = $("gLevel");
+const gQ = $("gQ");
+const gScore = $("gScore");
+const gStreak = $("gStreak");
+const gTime = $("gTime");
+const gModeTag = $("gModeTag");
+const gameBody = $("gameBody");
+const statusEl = $("status");
+const revealEl = $("reveal");
+
+/* teacher */
+const teacherModal = $("teacherModal");
+const btnCloseTeacher = $("btnCloseTeacher");
+const btnExportCSV = $("btnExportCSV");
+const btnExportJSON = $("btnExportJSON");
+const btnImportJSON = $("btnImportJSON");
+const importFile = $("importFile");
+const btnResetAll = $("btnResetAll");
+const tblStudents = $("tblStudents");
+const tblWrong = $("tblWrong");
+const stuCountEl = $("stuCount");
+
+/* FX */
+const fx = $("fx");
+const fxCtx = fx.getContext("2d");
+
+/* ========= init ========= */
+function init(){
+  passRule.textContent = `${PASS_SCORE}/10`;
+
+  // canvas
+  resizeFx();
+  window.addEventListener("resize", resizeFx);
+
+  // events
+  btnLogin.onclick = doLogin;
+  btnSwitch.onclick = ()=>{ state.curStudent=""; curStudent=""; saveState(); renderAll(); toast("已登出"); };
+  btnStartNext.onclick = startNextLevel;
+  btnMap.onclick = ()=> showMap();
+  btnBackMap.onclick = ()=> showMap();
+  btnPrevQ.onclick = prevQuestion;
+  btnNext.onclick = nextQuestion;
+  btnRetry.onclick = ()=> startLevel(inLevel, true);
+
+  btnSpeak.onclick = ()=> speakCurrent();
+  btnVoice.onclick = ()=> pickBestVoice(true);
+
+  btnTeacher.onclick = openTeacher;
+  btnCloseTeacher.onclick = ()=> teacherModal.style.display="none";
+  btnExportCSV.onclick = exportCSV;
+  btnExportJSON.onclick = exportJSON;
+  btnImportJSON.onclick = ()=> importFile.click();
+  importFile.onchange = importJSON;
+  btnResetAll.onclick = resetAll;
+
+  btnFullscreen.onclick = requestFull;
+
+  rate.oninput = ()=>{
+    rateVal.textContent = Number(rate.value).toFixed(2);
+    state.settings.rate = Number(rate.value);
+    saveState();
+  };
+
+  // load settings
+  if(!state.settings) state.settings = {};
+  if(!state.settings.rate) state.settings.rate = 0.95;
+  rate.value = state.settings.rate;
+  rateVal.textContent = Number(rate.value).toFixed(2);
+
+  // speech voices
+  speechSynthesis.onvoiceschanged = ()=> pickBestVoice(false);
+  pickBestVoice(false);
+
+  // map nodes
+  renderMap();
+  renderAll();
+
+  // keyboard
+  document.addEventListener("keydown", (e)=>{
+    if(screenGame.style.display==="block"){
+      if(e.key==="ArrowRight") nextQuestion();
+      if(e.key==="ArrowLeft") prevQuestion();
+      if(e.key===" ") { e.preventDefault(); speakCurrent(); }
+    }
+  });
+}
+init();
+
+/* ========= state/storage ========= */
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return {students:{}, curStudent:"", settings:{rate:0.95}};
+    const obj = JSON.parse(raw);
+    if(!obj.students) obj.students = {};
+    if(!obj.settings) obj.settings = {rate:0.95};
+    return obj;
+  }catch{
+    return {students:{}, curStudent:"", settings:{rate:0.95}};
+  }
+}
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function ensureStudent(name){
+  if(!state.students[name]){
+    state.students[name] = {
+      createdAt: Date.now(),
+      levels: {},    // level -> {bestScore, bestTimeMs, attempts, passed, firstPassConfettiDone}
+      wrong: {},     // wordId -> count
+      events: {},    // e.g. {streak5:true, streak10:true} globally or per student
+      plays: 0,
+      lastAt: 0
+    };
+  }
+  if(!state.students[name].events) state.students[name].events = {};
+  return state.students[name];
+}
+function getStu(){
+  if(!curStudent) return null;
+  return ensureStudent(curStudent);
+}
+
+/* ========= login ========= */
+function doLogin(){
+  const name = (studentInput.value||"").trim();
+  if(!name){ toast("請輸入姓名"); return; }
+  curStudent = name;
+  state.curStudent = name;
+  ensureStudent(name);
+  saveState();
+  studentInput.value = "";
+  renderAll();
+  toast(`登入成功：${name}`);
+}
+
+/* ========= badges ========= */
+const BADGES = [
+  {key:"b1", need:1,   icon:"🥉", title:"新手徽章", desc:"通關 1 關"},
+  {key:"b2", need:10,  icon:"🥈", title:"學習小達人", desc:"通關 10 關"},
+  {key:"b3", need:50,  icon:"🥇", title:"拼字高手", desc:"通關 50 關"},
+  {key:"b4", need:100, icon:"🏆", title:"南門拼字王", desc:"通關 100 關"},
 ];
-
-/* ========= 狀態 ========= */
-let student="";
-let data=JSON.parse(localStorage.getItem("DATA")||"{}");
-let level=1, q=0, score=0, mode="";
-const MODES=["A","B","C","D"];
-
-/* ========= 工具 ========= */
-function save(){localStorage.setItem("DATA",JSON.stringify(data))}
-function speak(t){
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(t);
-  u.rate=parseFloat(document.getElementById("spd")?.value||1);
-  speechSynthesis.speak(u);
-}
-function modeLabel(m){
-  return {A:"🎧 聽→選中文",B:"👀 看英文→選中文",C:"🧩 配對",D:"🎧 聽→拼英文"}[m]
-}
-
-/* ========= 登入 ========= */
-function login(){
-  student=document.getElementById("studentName").value.trim();
-  if(!student)return;
-  if(!data[student]) data[student]={done:0,records:[]};
-  save();
-  document.getElementById("who").textContent=student;
-  document.getElementById("loginCard").classList.add("hidden");
-  document.getElementById("homeCard").classList.remove("hidden");
-  renderMap();updateHome();
+function renderBadges(passedCount){
+  badgesEl.innerHTML = "";
+  let unlocked = 0;
+  BADGES.forEach(b=>{
+    const ok = passedCount >= b.need;
+    if(ok) unlocked++;
+    const div = document.createElement("div");
+    div.className = "badge " + (ok ? "unlocked" : "lock");
+    div.innerHTML = `
+      <div class="ico">${b.icon}</div>
+      <div>
+        <div class="t">${b.title}</div>
+        <div class="d">${b.desc}</div>
+      </div>
+    `;
+    badgesEl.appendChild(div);
+  });
+  badgeCountEl.textContent = unlocked;
 }
 
-/* ========= 首頁 ========= */
-function updateHome(){
-  document.getElementById("progressTxt").textContent=`${data[student].done}/100`;
-  document.getElementById("progressBar").style.width=`${data[student].done}%`;
-}
+/* ========= map ========= */
 function renderMap(){
-  const m=document.getElementById("map");m.innerHTML="";
-  for(let i=1;i<=100;i++){
-    const d=document.createElement("div");
-    d.className="level"+(i<=data[student].done?" done":"");
-    d.textContent="第"+i+"關";
-    m.appendChild(d);
+  pathEl.innerHTML = "";
+  const topPadding = 30;
+  const gapY = 140;
+  const totalH = topPadding + gapY*(LEVELS-1) + 140;
+  pathEl.style.minHeight = totalH+"px";
+
+  for(let i=1;i<=LEVELS;i++){
+    const node = document.createElement("div");
+    node.className = "node";
+    node.dataset.level = i;
+
+    const base = ((i-1)%2===0) ? 0.25 : 0.75;
+    const jitter = (randSeed(i)*0.12)-0.06;
+    const x = clamp(base + jitter, 0.14, 0.86);
+    const y = topPadding + gapY*(i-1);
+
+    node.style.left = `calc(${(x*100).toFixed(2)}% - 37px)`;
+    node.style.top = `${y}px`;
+
+    const icon = (i%10===0) ? "🏆" : (i%5===0) ? "🎁" : (i%3===0) ? "⭐" : "🎯";
+    node.innerHTML = `<div class="i">${icon}</div><div class="n">第${i}關</div>`;
+    node.onclick = ()=> startLevel(i, false);
+
+    pathEl.appendChild(node);
   }
 }
 
-/* ========= 遊戲 ========= */
-function startLevel(){
-  q=0;score=0;
-  mode=MODES[Math.floor(Math.random()*4)];
-  document.getElementById("nextMode").textContent=modeLabel(mode);
-  document.getElementById("gameCard").classList.remove("hidden");
-  nextQ();
+/* ========= mode pick ========= */
+function getModePick(){
+  const el = document.querySelector('input[name="modePick"]:checked');
+  return el ? el.value : "ALL";
 }
-function nextQ(){
-  if(q>=10){finish();return}
-  q++;
-  const [en,zh]=WORDS[Math.floor(Math.random()*WORDS.length)];
-  let html=`<b>第 ${q}/10 題</b><br><br>`;
-  if(mode==="A"){
-    html+=`<button onclick="speak('${en}')">🔊 播放</button><br><br>`;
-    html+=choices(zh);
-  }
-  if(mode==="B"){
-    html+=`<h2>${en}</h2>`;
-    html+=choices(zh);
-  }
-  if(mode==="C"){
-    html+=`<h2>${en} = ?</h2>`;
-    html+=choices(zh);
-  }
-  if(mode==="D"){
-    html+=`<button onclick="speak('${en}')">🔊 播放</button><br>
-           <input id="ans" placeholder="拼英文">
-           <button onclick="checkSpell('${en}')">送出</button>`;
-  }
-  html+=`<br><br><input id="spd" type="range" min="0.6" max="1.2" step="0.1" value="1" class="range"> 發音速度`;
-  document.getElementById("gameCard").innerHTML=html;
+function modeLabelShort(m){
+  if(m==="A") return "A 聽→選中";
+  if(m==="B") return "B 看英→選中";
+  if(m==="C") return "C 配對";
+  if(m==="D") return "D 聽→拼英";
+  return "ALL";
 }
-function choices(correct){
-  const opts=[correct];
-  while(opts.length<4){
-    const r=WORDS[Math.floor(Math.random()*WORDS.length)][1];
-    if(!opts.includes(r))opts.push(r);
-  }
-  opts.sort(()=>Math.random()-.5);
-  return opts.map(o=>`<div class="choice" onclick="pick('${o}','${correct}')">${o}</div>`).join("");
-}
-function pick(o,c){
-  if(o===c) score++;
-  nextQ();
-}
-function checkSpell(en){
-  const v=document.getElementById("ans").value.trim().toLowerCase();
-  if(v===en) score++;
-  nextQ();
-}
-function finish(){
-  data[student].done=Math.max(data[student].done,level);
-  data[student].records.push({level,score,time:Date.now()});
-  save();
-  document.getElementById("gameCard").innerHTML=
-    `<h2>🎉 完成！</h2>得分：${score}/10<br><br>
-     <button onclick="startLevel()">再玩一關</button>`;
-  updateHome();renderMap();
+function modeLabelLong(m){
+  if(m==="A") return "A 聽 → 選中文（不顯示英文）";
+  if(m==="B") return "B 看英文 → 選中文";
+  if(m==="C") return "C 英文 ↔ 中文配對";
+  if(m==="D") return "D 聽 → 拼英文單字";
+  return "全選";
 }
 
-/* ========= 老師 ========= */
-function showTeacher(){
-  document.getElementById("teacherCard").classList.toggle("hidden");
-  document.getElementById("teacherData").textContent=JSON.stringify(data,null,2);
+/* ========= render home/map state ========= */
+function renderAll(){
+  curStudentEl.textContent = curStudent || "未登入";
+  btnStartNext.disabled = !curStudent;
+
+  const stu = getStu();
+  let passedCount = 0;
+  let nextLv = 1;
+
+  if(stu){
+    for(let i=1;i<=LEVELS;i++){
+      if(stu.levels[i]?.passed) passedCount++;
+    }
+    nextLv = 1;
+    for(let i=1;i<=LEVELS;i++){
+      if(!stu.levels[i]?.passed){ nextLv=i; break; }
+      nextLv = Math.min(LEVELS, i+1);
+    }
+  }
+
+  passedCountEl.textContent = passedCount;
+  nextLevelEl.textContent = nextLv;
+  overallBar.style.width = `${Math.round((passedCount/LEVELS)*100)}%`;
+  renderBadges(passedCount);
+
+  // update nodes
+  const nodes = [...pathEl.querySelectorAll(".node")];
+  nodes.forEach(n=>{
+    const lv = Number(n.dataset.level);
+    n.classList.remove("locked","passed","current");
+    let locked = true;
+    let passed = false;
+    if(!stu){
+      locked = (lv!==1);
+    }else{
+      passed = !!stu.levels[lv]?.passed;
+      locked = (lv>1 && !stu.levels[lv-1]?.passed && !passed);
+      if(lv===1) locked = false;
+    }
+    if(locked) n.classList.add("locked");
+    if(passed) n.classList.add("passed");
+    if(stu && lv===nextLv) n.classList.add("current");
+  });
+
+  scrollToCurrent();
+}
+function scrollToCurrent(){
+  const stu = getStu();
+  if(!stu) return;
+  let nextLv = 1;
+  for(let i=1;i<=LEVELS;i++){
+    if(!stu.levels[i]?.passed){ nextLv=i; break; }
+    nextLv = Math.min(LEVELS, i+1);
+  }
+  const node = pathEl.querySelector(`.node[data-level="${nextLv}"]`);
+  if(node){
+    const y = node.offsetTop - 160;
+    mapInner.scrollTo({top: Math.max(0,y), behavior:"smooth"});
+  }
+}
+
+/* ========= navigation ========= */
+function showMap(){
+  stopTimer();
+  screenGame.style.display = "none";
+  screenMap.style.display = "grid";
+  renderAll();
+}
+function showGame(){
+  screenMap.style.display = "none";
+  screenGame.style.display = "block";
+}
+
+/* ========= start level ========= */
+function startNextLevel(){
+  if(!curStudent){ toast("請先登入"); return; }
+  const stu = getStu();
+  let nextLv = 1;
+  for(let i=1;i<=LEVELS;i++){
+    if(!stu.levels[i]?.passed){ nextLv=i; break; }
+    nextLv = Math.min(LEVELS, i+1);
+  }
+  startLevel(nextLv, false);
+}
+
+function startLevel(level, forceReplay){
+  const stu = getStu();
+  if(!stu){ toast("請先登入"); return; }
+
+  // lock check
+  if(level>1 && !stu.levels[level-1]?.passed && !stu.levels[level]?.passed){
+    toast("🔒 先通過上一關");
+    return;
+  }
+
+  inLevel = level;
+  qIndex = 0;
+  score = 0;
+  streak = 0;
+
+  // record attempt
+  if(!stu.levels[level]) stu.levels[level] = {bestScore:0, bestTimeMs:0, attempts:0, passed:false, firstPassConfettiDone:false};
+  stu.levels[level].attempts = (stu.levels[level].attempts||0) + 1;
+  stu.plays = (stu.plays||0) + 1;
+  stu.lastAt = Date.now();
+  saveState();
+
+  // build 10 questions based on selected type
+  const pick = getModePick(); // A/B/C/D/ALL
+  questions = buildQuestions(pick);
+
+  startTs = Date.now();
+  canNext = false;
+
+  showGame();
+  renderQuestion();
+  startTimer();
+}
+
+/* ========= question building ========= */
+function buildQuestions(pick){
+  // unique words within a level (avoid duplicates)
+  const pickedWords = pickUnique(WORDS, Q_PER_LEVEL);
+
+  // create 10 modes
+  let modes = [];
+  if(pick === "ALL"){
+    // guarantee each A/B/C/D appears at least once in 10
+    const base = ["A","B","C","D"];
+    modes = base.slice();
+    while(modes.length < Q_PER_LEVEL){
+      modes.push(base[Math.floor(Math.random()*base.length)]);
+    }
+    shuffle(modes);
+  }else{
+    modes = Array(Q_PER_LEVEL).fill(pick);
+  }
+
+  // Build question objects; for C we make a mini-matching with 3 pairs (counts as 1 question)
+  const qs = [];
+  let cursor = 0;
+  for(let i=0;i<Q_PER_LEVEL;i++){
+    const m = modes[i];
+    if(m === "C"){
+      // take 3 words if available, else fallback to 2
+      const pairs = [];
+      for(let k=0;k<3;k++){
+        const w = pickedWords[cursor % pickedWords.length];
+        pairs.push(w);
+        cursor++;
+      }
+      qs.push({mode:"C", pairs});
+    }else{
+      const w = pickedWords[cursor % pickedWords.length];
+      cursor++;
+      qs.push({mode:m, word:w});
+    }
+  }
+  return qs;
+}
+
+/* ========= render question ========= */
+function renderQuestion(){
+  statusEl.textContent = "";
+  statusEl.className = "status";
+  revealEl.textContent = "";
+  btnNext.disabled = true;
+  canNext = false;
+
+  gLevel.textContent = inLevel;
+  gQ.textContent = qIndex + 1;
+  gScore.textContent = score;
+  gStreak.textContent = streak;
+
+  btnPrevQ.disabled = (qIndex===0);
+
+  const q = questions[qIndex];
+  gModeTag.textContent = modeLabelShort(q.mode);
+  gameBody.innerHTML = "";
+
+  if(q.mode==="A") renderA(q);
+  if(q.mode==="B") renderB(q);
+  if(q.mode==="C") renderC(q);
+  if(q.mode==="D") renderD(q);
+
+  // auto speak for A/D
+  if(q.mode==="A" || q.mode==="D"){
+    setTimeout(()=> speak(q.word.en), 250);
+  }
+}
+
+/* ========= mode A: listen -> choose zh (no english on screen) ========= */
+function renderA(q){
+  const w = q.word;
+  const title = document.createElement("div");
+  title.className = "bigTitle";
+  title.textContent = "🔊 聽音選中文";
+  const sub = document.createElement("div");
+  sub.className = "sub";
+  sub.textContent = "按播放聽英文，選出正確中文（不會顯示英文）";
+  gameBody.appendChild(title);
+  gameBody.appendChild(sub);
+
+  const correct = w.zh;
+  const opts = [correct, ...pickDistractorsZh(w.id, 3)];
+  shuffle(opts);
+
+  const box = document.createElement("div");
+  box.className = "choices grid2";
+  opts.forEach(txt=>{
+    const c = document.createElement("div");
+    c.className = "choice";
+    c.textContent = txt;
+    c.onclick = ()=> {
+      if(canNext) return;
+      const ok = (txt===correct);
+      markAndFinalizeChoice(box, c, ok, w);
+    };
+    box.appendChild(c);
+  });
+  gameBody.appendChild(box);
+}
+
+/* ========= mode B: show english -> choose zh ========= */
+function renderB(q){
+  const w = q.word;
+  const title = document.createElement("div");
+  title.className = "bigTitle";
+  title.textContent = w.en;
+  const sub = document.createElement("div");
+  sub.className = "sub";
+  sub.textContent = "選出正確中文意思";
+  gameBody.appendChild(title);
+  gameBody.appendChild(sub);
+
+  const correct = w.zh;
+  const opts = [correct, ...pickDistractorsZh(w.id, 3)];
+  shuffle(opts);
+
+  const box = document.createElement("div");
+  box.className = "choices grid2";
+  opts.forEach(txt=>{
+    const c = document.createElement("div");
+    c.className = "choice";
+    c.textContent = txt;
+    c.onclick = ()=> {
+      if(canNext) return;
+      const ok = (txt===correct);
+      markAndFinalizeChoice(box, c, ok, w);
+    };
+    box.appendChild(c);
+  });
+  gameBody.appendChild(box);
+}
+
+/* ========= mode C: mini matching (3 pairs) counts as 1 question ========= */
+function renderC(q){
+  const pairs = q.pairs; // 3 words
+  const title = document.createElement("div");
+  title.className = "bigTitle";
+  title.textContent = "🧩 英中配對";
+  const sub = document.createElement("div");
+  sub.className = "sub";
+  sub.textContent = "點英文，再點對應中文（完成 3 組配對算答對）";
+  gameBody.appendChild(title);
+  gameBody.appendChild(sub);
+
+  const left = pairs.map(w=>({type:"en", id:w.id, text:w.en, w}));
+  const right = pairs.map(w=>({type:"zh", id:w.id, text:w.zh, w}));
+
+  shuffle(left); shuffle(right);
+  const grid = document.createElement("div");
+  grid.className = "matchGrid";
+
+  let selected = null;
+  let matched = new Set();
+  let wrongTouches = 0;
+
+  function clickTile(tile, item){
+    if(tile.classList.contains("done")) return;
+    if(!selected){
+      selected = {tile, item};
+      tile.classList.add("sel");
+      return;
+    }
+    if(selected.tile === tile) return;
+
+    const ok = (selected.item.id === item.id) && (selected.item.type !== item.type);
+    selected.tile.classList.remove("sel");
+    tile.classList.remove("sel");
+
+    if(ok){
+      selected.tile.classList.add("ok","done");
+      tile.classList.add("ok","done");
+      matched.add(item.id);
+      selected = null;
+
+      if(matched.size === pairs.length){
+        // correct if wrongTouches == 0, else still correct? Here: allow but count as wrong if any mismatch.
+        const finalOk = (wrongTouches === 0);
+        finalizeAnswer(finalOk, pairs[0], {customReveal: finalOk ? "" : "正解：三組都要配對正確"}); // pairs[0] just for wrong stat bucketing
+      }
+    }else{
+      wrongTouches++;
+      selected.tile.classList.add("no");
+      tile.classList.add("no");
+      setTimeout(()=>{ selected?.tile?.classList.remove("no"); tile.classList.remove("no"); }, 320);
+
+      // record wrong for both if have word
+      const stu = getStu();
+      if(stu){
+        bumpWrong(stu, selected.item.w?.id);
+        bumpWrong(stu, item.w?.id);
+        saveState();
+      }
+
+      selected = null;
+    }
+  }
+
+  const allTiles = [];
+  left.forEach(item=>allTiles.push(item));
+  right.forEach(item=>allTiles.push(item));
+  // Interleave to look nicer
+  const mixed = shuffle(allTiles);
+
+  mixed.forEach(item=>{
+    const t = document.createElement("div");
+    t.className = "tile";
+    t.textContent = item.text;
+    t.onclick = ()=> clickTile(t, item);
+    grid.appendChild(t);
+  });
+
+  const wrap = document.createElement("div");
+  wrap.className = "matchWrap";
+  wrap.appendChild(grid);
+  gameBody.appendChild(wrap);
+}
+
+/* ========= mode D: listen -> spell english ========= */
+function renderD(q){
+  const w = q.word;
+  const title = document.createElement("div");
+  title.className = "bigTitle";
+  title.textContent = "🎧 聽音拼英文";
+  const sub = document.createElement("div");
+  sub.className = "sub";
+  sub.textContent = "按播放聽英文，輸入英文單字（不分大小寫）";
+  gameBody.appendChild(title);
+  gameBody.appendChild(sub);
+
+  const box = document.createElement("div");
+  box.className = "spellBox";
+  box.innerHTML = `
+    <div class="row" style="justify-content:center">
+      <span class="chip">中文提示：<b>${escapeHtml(w.zh)}</b></span>
+      <span class="chip">字母數：<b>${String(w.en).length}</b></span>
+    </div>
+    <div class="row" style="justify-content:center; margin-top:10px">
+      <input id="spellInput" class="spellInput" placeholder="輸入英文…" autocomplete="off" autocapitalize="none" />
+      <button class="primary small" id="spellSubmit">送出</button>
+    </div>
+  `;
+  gameBody.appendChild(box);
+
+  const input = document.getElementById("spellInput");
+  const submit = document.getElementById("spellSubmit");
+  input.focus();
+
+  const doCheck = ()=>{
+    if(canNext) return;
+    const ans = (input.value||"").trim().toLowerCase();
+    const ok = ans === String(w.en).toLowerCase();
+    finalizeAnswer(ok, w, {customReveal: ok ? "" : `正解：${w.en} ＝ ${w.zh}`});
+    submit.disabled = true;
+    input.disabled = true;
+  };
+
+  submit.onclick = doCheck;
+  input.addEventListener("keydown", (e)=>{
+    if(e.key==="Enter") doCheck();
+  });
+}
+
+/* ========= answer helpers ========= */
+function markAndFinalizeChoice(container, chosenEl, ok, word){
+  // lock all
+  [...container.children].forEach(el=>el.style.pointerEvents="none");
+  if(ok){
+    chosenEl.classList.add("correct");
+  }else{
+    chosenEl.classList.add("wrong");
+    // highlight correct
+    [...container.children].forEach(el=>{
+      if(el.textContent === word.zh) el.classList.add("correct");
+    });
+  }
+  finalizeAnswer(ok, word);
+}
+
+function finalizeAnswer(ok, word, meta={}){
+  const stu = getStu();
+  if(stu && !ok){
+    bumpWrong(stu, word.id);
+    saveState();
+  }
+
+  if(ok){
+    score += 1;
+    streak += 1;
+    statusEl.className = "status good";
+    statusEl.textContent = "✅ 答對！";
+    revealEl.textContent = meta.customReveal || "";
+  }else{
+    streak = 0;
+    statusEl.className = "status bad";
+    statusEl.textContent = "❌ 錯了";
+    revealEl.textContent = meta.customReveal || `正解：${word.en} ＝ ${word.zh}`;
+  }
+  gScore.textContent = score;
+  gStreak.textContent = streak;
+
+  // streak animations (5 & 10) - play only once per student overall
+  if(stu){
+    if(streak >= 5 && !stu.events.streak5){
+      stu.events.streak5 = true;
+      saveState();
+      streakBurst(5);
+    }
+    if(streak >= 10 && !stu.events.streak10){
+      stu.events.streak10 = true;
+      saveState();
+      streakBurst(10);
+    }
+  }
+
+  btnNext.disabled = false;
+  canNext = true;
+}
+
+/* ========= navigation between questions ========= */
+function prevQuestion(){
+  if(qIndex<=0) return;
+  qIndex--;
+  renderQuestion();
+}
+function nextQuestion(){
+  if(!canNext){ toast("先作答再下一題"); return; }
+  if(qIndex < Q_PER_LEVEL-1){
+    qIndex++;
+    renderQuestion();
+  }else{
+    endLevel();
+  }
+}
+
+/* ========= end level ========= */
+function endLevel(){
+  stopTimer();
+  const ms = Date.now() - startTs;
+  const stu = getStu();
+  const lv = inLevel;
+
+  const rec = stu.levels[lv] || {bestScore:0, bestTimeMs:0, attempts:0, passed:false, firstPassConfettiDone:false};
+
+  // best score/time
+  if(score > (rec.bestScore||0) || (score === (rec.bestScore||0) && (rec.bestTimeMs===0 || ms < rec.bestTimeMs))){
+    rec.bestScore = score;
+    rec.bestTimeMs = ms;
+  }
+
+  const passedNow = score >= PASS_SCORE;
+  let firstPass = false;
+  if(passedNow && !rec.passed){
+    rec.passed = true;
+    firstPass = true;
+  }
+
+  // confetti only first pass once
+  if(firstPass && !rec.firstPassConfettiDone){
+    rec.firstPassConfettiDone = true;
+    confetti();
+  }
+
+  stu.levels[lv] = rec;
+  saveState();
+
+  const minutes = Math.floor(ms/60000);
+  const seconds = Math.floor((ms%60000)/1000);
+  const timeStr = `${minutes}:${String(seconds).padStart(2,"0")}`;
+
+  gameBody.innerHTML = `
+    <div class="bigTitle" style="font-size:28px;margin-top:6px">${passedNow ? "🎉 通關成功！" : "再試一次就更強！"}</div>
+    <div class="sub">第 ${lv} 關完成｜得分 <b>${score}/10</b>｜時間 <b>${timeStr}</b>｜門檻 <b>${PASS_SCORE}/10</b></div>
+    <div class="footerBtns">
+      <button class="ghost" onclick="showMap()">🗺️ 回地圖</button>
+      <button class="primary" onclick="startLevel(${lv}, true)">🔁 重玩本關</button>
+      <button class="primary" onclick="startLevel(${Math.min(LEVELS, lv+1)}, false)">➡️ 下一關</button>
+    </div>
+    <div class="note" style="text-align:center;margin-top:10px">
+      ⭐ 徽章會隨通關關數解鎖。🔥 連續答對 5/10 題會觸發動畫（每位學生第一次達成才會播）。
+    </div>
+  `;
+
+  statusEl.textContent = "";
+  revealEl.textContent = "";
+  btnNext.disabled = true;
+  btnPrevQ.disabled = true;
+  canNext = false;
+
+  // update header stats
+  gQ.textContent = 10;
+  gScore.textContent = score;
+  gStreak.textContent = streak;
+}
+
+/* ========= speech ========= */
+function pickBestVoice(forceToast){
+  const voices = speechSynthesis.getVoices() || [];
+  if(!voices.length){
+    if(forceToast) toast("語音尚未載入，稍後再按一次");
+    return;
+  }
+  const prefer = voices
+    .filter(v => (v.lang||"").toLowerCase().startsWith("en"))
+    .sort((a,b)=> scoreVoice(b) - scoreVoice(a));
+  bestVoice = prefer[0] || voices[0];
+  if(forceToast){
+    toast(`已選用語音：${bestVoice.name}（${bestVoice.lang}）`);
+  }
+
+  function scoreVoice(v){
+    let s = 0;
+    const lang = (v.lang||"").toLowerCase();
+    const name = (v.name||"").toLowerCase();
+    if(lang.startsWith("en-us")) s += 35;
+    if(name.includes("google")) s += 45;
+    if(name.includes("samantha")) s += 35;
+    if(name.includes("enhanced")) s += 20;
+    if(name.includes("premium")) s += 20;
+    if(name.includes("natural")) s += 20;
+    if(v.localService===false) s += 5;
+    return s;
+  }
+}
+function speak(text){
+  if(!text) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = (bestVoice && bestVoice.lang) ? bestVoice.lang : "en-US";
+    if(bestVoice) u.voice = bestVoice;
+    u.rate = Number(rate.value || 0.95);
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    speechSynthesis.speak(u);
+  }catch(e){
+    toast("此裝置不支援發音");
+  }
+}
+function speakCurrent(){
+  const q = questions[qIndex];
+  if(!q) return;
+  // never speak question number; only speak the word
+  if(q.mode==="A" || q.mode==="D" || q.mode==="B"){
+    speak(q.word.en);
+  }else{
+    // C: speak nothing by default
+    toast("配對題不需播放");
+  }
+}
+
+/* ========= timer ========= */
+function startTimer(){
+  stopTimer();
+  timerId = setInterval(()=>{
+    const ms = Date.now() - startTs;
+    const m = Math.floor(ms/60000);
+    const s = Math.floor((ms%60000)/1000);
+    gTime.textContent = `${m}:${String(s).padStart(2,"0")}`;
+  }, 250);
+}
+function stopTimer(){
+  if(timerId){ clearInterval(timerId); timerId=null; }
+}
+
+/* ========= teacher backend ========= */
+function openTeacher(){
+  const pass = prompt("輸入老師密碼：");
+  if(pass !== TEACHER_PASS){
+    toast("密碼錯誤");
+    return;
+  }
+  renderTeacher();
+  teacherModal.style.display = "grid";
+}
+function renderTeacher(){
+  const names = Object.keys(state.students||{});
+  stuCountEl.textContent = names.length;
+
+  // student table
+  tblStudents.innerHTML = "";
+  names.sort((a,b)=>a.localeCompare(b,"zh-Hant")).forEach(name=>{
+    const s = state.students[name];
+    let passed = 0;
+    let nextLv = 1;
+    for(let i=1;i<=LEVELS;i++){
+      if(s.levels?.[i]?.passed) passed++;
+    }
+    for(let i=1;i<=LEVELS;i++){
+      if(!s.levels?.[i]?.passed){ nextLv=i; break; }
+      nextLv = Math.min(LEVELS, i+1);
+    }
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${escapeHtml(name)}</b></td>
+      <td class="right">${passed}</td>
+      <td class="right">${nextLv}</td>
+      <td class="right">${s.plays||0}</td>
+      <td>${s.lastAt ? new Date(s.lastAt).toLocaleString() : "-"}</td>
+    `;
+    tblStudents.appendChild(tr);
+  });
+
+  // wrong top 30
+  const wrongAgg = {};
+  names.forEach(name=>{
+    const w = state.students[name].wrong || {};
+    Object.keys(w).forEach(id=>{
+      wrongAgg[id] = (wrongAgg[id]||0) + (w[id]||0);
+    });
+  });
+
+  tblWrong.innerHTML = "";
+  Object.entries(wrongAgg).sort((a,b)=>b[1]-a[1]).slice(0,30).forEach(([id,c])=>{
+    const ww = WORDS.find(x=>x.id===Number(id));
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${ww?escapeHtml(ww.en):id}</b></td>
+      <td>${ww?escapeHtml(ww.zh):"-"}</td>
+      <td class="right">${c}</td>
+    `;
+    tblWrong.appendChild(tr);
+  });
 }
 function exportCSV(){
-  let s="學生,關卡,分數\n";
-  for(const k in data){
-    data[k].records.forEach(r=>s+=`${k},${r.level},${r.score}\n`);
-  }
-  download(s,"data.csv");
+  const rows = [];
+  rows.push(["student","level","passed","bestScore","bestTimeSec","attempts","plays","lastAt"]);
+  Object.keys(state.students||{}).forEach(name=>{
+    const s = state.students[name];
+    for(let lv=1;lv<=LEVELS;lv++){
+      const r = s.levels?.[lv];
+      if(!r) continue;
+      rows.push([
+        name,
+        lv,
+        r.passed ? 1 : 0,
+        r.bestScore||0,
+        r.bestTimeMs ? Math.round(r.bestTimeMs/1000) : 0,
+        r.attempts||0,
+        s.plays||0,
+        s.lastAt ? new Date(s.lastAt).toISOString() : ""
+      ]);
+    }
+  });
+  downloadCSV("nmps_spelling_progress.csv", rows);
+  toast("已匯出CSV");
 }
 function exportJSON(){
-  download(JSON.stringify(data,null,2),"data.json");
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+  downloadBlob("nmps_spelling_state.json", blob);
+  toast("已匯出JSON");
 }
-function download(t,n){
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([t]));
-  a.download=n;a.click();
+async function importJSON(e){
+  const f = e.target.files?.[0];
+  if(!f) return;
+  const txt = await f.text();
+  try{
+    const obj = JSON.parse(txt);
+    if(obj.students){
+      Object.keys(obj.students).forEach(name=>{
+        if(!state.students[name]) state.students[name] = obj.students[name];
+        else{
+          // merge
+          const a = state.students[name];
+          const b = obj.students[name];
+          a.levels = a.levels || {};
+          b.levels = b.levels || {};
+          Object.keys(b.levels).forEach(lv=>{
+            const L = lv;
+            if(!a.levels[L]) a.levels[L] = b.levels[L];
+            else{
+              const r1 = a.levels[L], r2 = b.levels[L];
+              const bestScore = Math.max(r1.bestScore||0, r2.bestScore||0);
+              let bestTime = r1.bestTimeMs||0;
+              if(bestScore === (r2.bestScore||0)){
+                if(bestTime===0 || (r2.bestTimeMs||0) < bestTime) bestTime = r2.bestTimeMs||0;
+              }
+              a.levels[L] = {
+                bestScore,
+                bestTimeMs: bestTime,
+                attempts: (r1.attempts||0) + (r2.attempts||0),
+                passed: !!(r1.passed || r2.passed),
+                firstPassConfettiDone: !!(r1.firstPassConfettiDone || r2.firstPassConfettiDone)
+              };
+            }
+          });
+          a.wrong = a.wrong || {};
+          b.wrong = b.wrong || {};
+          Object.keys(b.wrong).forEach(id=>{
+            a.wrong[id] = (a.wrong[id]||0) + (b.wrong[id]||0);
+          });
+          a.events = a.events || {};
+          b.events = b.events || {};
+          Object.keys(b.events).forEach(k=>{
+            a.events[k] = a.events[k] || b.events[k];
+          });
+          a.plays = (a.plays||0) + (b.plays||0);
+          a.lastAt = Math.max(a.lastAt||0, b.lastAt||0);
+        }
+      });
+      saveState();
+      renderTeacher();
+      renderAll();
+      toast("已匯入並彙整完成");
+    }else{
+      toast("JSON格式不正確");
+    }
+  }catch{
+    toast("讀取JSON失敗");
+  }finally{
+    importFile.value = "";
+  }
 }
-function toggleFull(){
-  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
-  else document.exitFullscreen();
+function resetAll(){
+  if(confirm("確定清空本裝置所有學生資料？此動作不可復原。")){
+    localStorage.removeItem(LS_KEY);
+    state = loadState();
+    curStudent = "";
+    renderAll();
+    toast("已清空");
+  }
 }
+
+/* ========= wrong stats ========= */
+function bumpWrong(stu, wordId){
+  if(!wordId) return;
+  if(!stu.wrong) stu.wrong = {};
+  stu.wrong[wordId] = (stu.wrong[wordId]||0) + 1;
+}
+
+/* ========= full screen ========= */
+function requestFull(){
+  const el = document.documentElement;
+  if(el.requestFullscreen){
+    el.requestFullscreen().catch(()=>toast("此瀏覽器不支援全螢幕"));
+  }else{
+    toast("此瀏覽器不支援全螢幕");
+  }
+}
+
+/* ========= FX: confetti + streak animations ========= */
+function resizeFx(){
+  fx.width = window.innerWidth * devicePixelRatio;
+  fx.height = window.innerHeight * devicePixelRatio;
+  fx.style.width = window.innerWidth+"px";
+  fx.style.height = window.innerHeight+"px";
+  fxCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+function confetti(){
+  // pass confetti
+  runParticles(180, 1.0, false);
+}
+function streakBurst(n){
+  // 5: small burst, 10: big burst with stars
+  if(n>=10){
+    runParticles(260, 1.25, true);
+    toast("🔥 連續答對 10 題！太強了！");
+  }else{
+    runParticles(160, 1.0, false);
+    toast("✨ 連續答對 5 題！讚！");
+  }
+}
+function runParticles(count, speedMul, star){
+  const W = window.innerWidth, H = window.innerHeight;
+  const colors = ["#22c55e","#60a5fa","#f59e0b","#ef4444","#a78bfa","#14b8a6"];
+  const pieces = [];
+  for(let i=0;i<count;i++){
+    pieces.push({
+      x: Math.random()*W,
+      y: -20 - Math.random()*H*0.2,
+      vx: (Math.random()-0.5)*4*speedMul,
+      vy: (2 + Math.random()*6)*speedMul,
+      r: 3 + Math.random()*6,
+      c: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*Math.PI,
+      vr: (Math.random()-0.5)*0.25,
+      star
+    });
+  }
+  let t0 = performance.now();
+  function step(t){
+    const dt = (t - t0)/16.7;
+    t0 = t;
+    fxCtx.clearRect(0,0,W,H);
+    pieces.forEach(p=>{
+      p.x += p.vx*dt;
+      p.y += p.vy*dt;
+      p.vy += 0.06*dt;
+      p.rot += p.vr*dt;
+
+      fxCtx.save();
+      fxCtx.translate(p.x,p.y);
+      fxCtx.rotate(p.rot);
+      fxCtx.fillStyle = p.c;
+
+      if(p.star){
+        // draw star
+        drawStar(fxCtx, 0, 0, 5, p.r*1.6, p.r*0.7);
+      }else{
+        fxCtx.fillRect(-p.r, -p.r, p.r*2.2, p.r*1.4);
+      }
+      fxCtx.restore();
+    });
+    for(let i=pieces.length-1;i>=0;i--){
+      if(pieces[i].y > H+60) pieces.splice(i,1);
+    }
+    if(pieces.length>0) requestAnimationFrame(step);
+    else fxCtx.clearRect(0,0,W,H);
+  }
+  requestAnimationFrame(step);
+}
+function drawStar(ctx, x, y, spikes, outerRadius, innerRadius){
+  let rot = Math.PI/2 * 3;
+  let cx = x, cy = y;
+  let step = Math.PI / spikes;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerRadius);
+  for(let i=0;i<spikes;i++){
+    ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+    rot += step;
+    ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
+    rot += step;
+  }
+  ctx.lineTo(cx, cy - outerRadius);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ========= utilities ========= */
+function pickUnique(arr, n){
+  const copy = arr.slice();
+  shuffle(copy);
+  return copy.slice(0, n);
+}
+function pickDistractorsZh(correctId, k){
+  const pool = WORDS.filter(w=>w.id!==correctId).map(w=>w.zh);
+  const picked = [];
+  while(picked.length<k){
+    const z = pool[Math.floor(Math.random()*pool.length)];
+    if(!picked.includes(z)) picked.push(z);
+  }
+  return picked;
+}
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function randSeed(i){
+  const x = Math.sin(i*999.123)*10000;
+  return x - Math.floor(x);
+}
+function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+function toast(msg){
+  const t = document.createElement("div");
+  t.textContent = msg;
+  t.style.position="fixed";
+  t.style.left="50%";
+  t.style.bottom="18px";
+  t.style.transform="translateX(-50%)";
+  t.style.background="rgba(15,23,42,.92)";
+  t.style.color="#fff";
+  t.style.padding="10px 12px";
+  t.style.borderRadius="14px";
+  t.style.boxShadow="0 18px 34px rgba(2,6,23,.35)";
+  t.style.fontWeight="1000";
+  t.style.zIndex=70;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .25s"; }, 1300);
+  setTimeout(()=>t.remove(), 1700);
+}
+function downloadCSV(filename, rows){
+  const csv = rows.map(r=>r.map(x=>{
+    const s = String(x??"");
+    if(/[",\n]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+    return s;
+  }).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  downloadBlob(filename, blob);
+}
+function downloadBlob(filename, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+/* ========= hook up top buttons ========= */
+btnMap.addEventListener("click", showMap);
+
+/* ========= start from current view ========= */
+(function bootstrapView(){
+  // show map by default
+  showMap();
+})();
 </script>
 </body>
 </html>
