@@ -1,314 +1,245 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>南門國小拼字挑戰Go</title>
-  <style>
-    :root{
-      --bg:#f5f7fb; --card:#fff; --ink:#111827; --muted:#6b7280;
-      --blue:#3b82f6; --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
-      --line:#e5e7eb; --shadow:0 10px 24px rgba(0,0,0,.10);
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans TC","PingFang TC",Segoe UI,Roboto,sans-serif}
-    a{color:inherit}
-    .wrap{max-width:980px;margin:0 auto;padding:16px 14px 80px}
-    .topbar{
-      position:sticky;top:0;z-index:5;background:rgba(245,247,251,.85);
-      backdrop-filter: blur(10px);border-bottom:1px solid var(--line);
-    }
-    .topbar .inner{max-width:980px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
-    .brand{font-weight:900;letter-spacing:.5px}
-    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 10px;font-size:13px;color:var(--muted)}
-    .btn{border:0;border-radius:14px;padding:12px 14px;font-weight:800;cursor:pointer}
-    .btn.primary{background:var(--blue);color:#fff}
-    .btn.ghost{background:#fff;border:1px solid var(--line)}
-    .btn.small{padding:8px 10px;border-radius:12px;font-weight:800;font-size:13px}
-    .btn.danger{background:#fff;border:1px solid #fecaca;color:#b91c1c}
-    .grid{display:grid;gap:12px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .muted{color:var(--muted)}
-    .center{text-align:center}
-    .title{font-size:22px;font-weight:950;margin:0}
-    .subtitle{margin:6px 0 0;color:var(--muted);font-weight:700}
-    .divider{height:1px;background:var(--line);margin:12px 0}
-    .hidden{display:none!important}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>南門國小拼字挑戰Go</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#fff; --ink:#111827; --muted:#6b7280;
+    --blue:#2563eb; --green:#16a34a; --red:#dc2626; --line:#e5e7eb;
+    --r:16px; --sh:0 10px 22px rgba(0,0,0,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans TC","PingFang TC",Segoe UI,Roboto,sans-serif}
+  .top{position:sticky;top:0;z-index:9;background:rgba(246,247,251,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top .in{max-width:980px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center}
+  .brand{font-weight:950}
+  .sp{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;font-size:13px;color:var(--muted);font-weight:800}
+  .wrap{max-width:980px;margin:0 auto;padding:14px 14px 90px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:14px}
+  .grid{display:grid;gap:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .muted{color:var(--muted)}
+  .btn{border:0;border-radius:14px;padding:12px 14px;font-weight:950;cursor:pointer}
+  .btn.primary{background:var(--blue);color:#fff}
+  .btn.ghost{background:#fff;border:1px solid var(--line)}
+  .btn.small{padding:8px 10px;border-radius:12px;font-size:13px}
+  .btn.danger{background:#fff;border:1px solid #fecaca;color:#b91c1c}
+  .divider{height:1px;background:var(--line);margin:12px 0}
+  .center{text-align:center}
+  .hidden{display:none!important}
 
-    /* Map */
-    .mapWrap{position:relative}
-    .mapLegend{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0 2px;color:var(--muted);font-weight:700;font-size:13px}
-    .dot{width:10px;height:10px;border-radius:999px;display:inline-block}
-    .dot.done{background:var(--green)}
-    .dot.now{background:var(--blue)}
-    .dot.lock{background:#cbd5e1}
-    .map{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap:16px;
-      padding:14px;
-    }
-    .node{
-      width:82px;height:82px;border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      margin:0 auto;
-      background:#fff;border:1px solid var(--line);
-      box-shadow:0 10px 22px rgba(0,0,0,.08);
-      font-weight:950;font-size:18px;
-      user-select:none;
-      position:relative;
-    }
-    .node.done{background:var(--green);color:#fff;border-color:rgba(255,255,255,.35)}
-    .node.now{background:var(--blue);color:#fff;border-color:rgba(255,255,255,.35)}
-    .node.lock{opacity:.35}
-    .node .badge{
-      position:absolute;bottom:-6px;right:-6px;
-      font-size:12px;background:#fff;border:1px solid var(--line);
-      border-radius:999px;padding:4px 6px;color:var(--muted);font-weight:900
-    }
-    .node.done .badge,.node.now .badge{background:rgba(255,255,255,.95)}
-    .mapPath{
-      position:absolute;inset:0;pointer-events:none;opacity:.25
-    }
+  /* Map */
+  .legend{display:flex;gap:10px;justify-content:center;align-items:center;color:var(--muted);font-weight:900;font-size:13px;margin:8px 0 0}
+  .dot{width:10px;height:10px;border-radius:999px;display:inline-block}
+  .dot.done{background:var(--green)} .dot.now{background:var(--blue)} .dot.lock{background:#cbd5e1}
+  .map{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:14px}
+  .node{
+    width:82px;height:82px;border-radius:999px;margin:0 auto;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;border:1px solid var(--line);box-shadow:0 10px 20px rgba(0,0,0,.08);
+    font-weight:950;font-size:18px;user-select:none;position:relative
+  }
+  .node.done{background:var(--green);color:#fff;border-color:rgba(255,255,255,.35)}
+  .node.now{background:var(--blue);color:#fff;border-color:rgba(255,255,255,.35)}
+  .node.lock{opacity:.33}
+  .badge{position:absolute;right:-6px;bottom:-6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 6px;font-size:12px;font-weight:950;color:var(--muted)}
+  .node.done .badge,.node.now .badge{background:rgba(255,255,255,.95)}
+  /* Game */
+  .hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .bar{height:12px;border-radius:999px;background:#e5e7eb;overflow:hidden;flex:1;min-width:220px}
+  .bar>div{height:100%;width:0%;background:var(--green)}
+  .timer{font-weight:950;color:var(--red)}
+  .modeTag{border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;border-radius:999px;padding:6px 10px;font-weight:950}
+  .qBig{font-size:36px;font-weight:950;margin:10px 0 4px}
+  .help{margin:0 0 10px;color:var(--muted);font-weight:900}
+  .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .opt{
+    border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;
+    font-weight:950;font-size:18px;cursor:pointer;box-shadow:0 8px 16px rgba(0,0,0,.06)
+  }
+  .opt:active{transform:scale(.99)}
+  .opt.correct{border-color:#86efac;background:#ecfdf5}
+  .opt.wrong{border-color:#fecaca;background:#fef2f2}
+  .hint{margin-top:10px;font-weight:950;font-size:18px}
+  .ok{color:var(--green)} .bad{color:var(--red)}
+  .input{width:100%;border:1px solid var(--line);border-radius:16px;padding:14px;font-size:18px;font-weight:950}
+  .speedBox{margin-top:8px;text-align:center;font-size:13px;color:var(--muted);font-weight:900}
+  .speedBox input{width:170px;vertical-align:middle}
+  .match{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .tile{
+    border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;
+    font-weight:950;font-size:18px;cursor:pointer;box-shadow:0 8px 16px rgba(0,0,0,.06)
+  }
+  .tile.sel{outline:3px solid #93c5fd}
+  .tile.gone{opacity:.15;pointer-events:none}
+  /* Teacher */
+  table{width:100%;border-collapse:collapse}
+  th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;font-size:13px}
+  th{color:var(--muted)}
+  .kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .box{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px}
+  .num{font-weight:950;font-size:20px}
+  .lbl{color:var(--muted);font-weight:900;font-size:12px}
 
-    /* Game */
-    .hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-    .progressBar{height:12px;border-radius:999px;background:#e5e7eb;overflow:hidden;flex:1;min-width:200px}
-    .progressBar > div{height:100%;background:var(--green);width:0%}
-    .timer{font-weight:950;color:var(--red)}
-    .modeTag{font-weight:950;border-radius:999px;padding:6px 10px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe}
-    .qTitle{font-size:36px;font-weight:950;margin:12px 0 6px}
-    .helpText{color:var(--muted);font-weight:800;margin:0 0 10px}
-    .options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .opt{
-      border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;
-      font-weight:950;font-size:18px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.06)
-    }
-    .opt:active{transform:scale(.99)}
-    .opt.correct{border-color:#86efac;background:#ecfdf5}
-    .opt.wrong{border-color:#fecaca;background:#fef2f2}
-    .bigBtn{width:100%;padding:14px 14px;font-size:18px;border-radius:16px}
-
-    .spellRow{display:flex;gap:10px;align-items:center}
-    .spellInput{
-      width:100%;border:1px solid var(--line);border-radius:16px;padding:14px;font-size:18px;font-weight:900
-    }
-
-    /* Matching */
-    .matchGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .tile{
-      border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px;
-      font-weight:950;font-size:18px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.06)
-    }
-    .tile.sel{outline:3px solid #93c5fd}
-    .tile.gone{opacity:.15;pointer-events:none}
-    .combo{color:var(--muted);font-weight:900}
-
-    /* Teacher */
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;font-size:13px}
-    th{color:var(--muted)}
-    .kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-    .kpi .box{border:1px solid var(--line);border-radius:16px;background:#fff;padding:12px}
-    .kpi .num{font-weight:950;font-size:20px}
-    .kpi .lbl{color:var(--muted);font-weight:800;font-size:12px}
-
-    /* Bottom nav */
-    .nav{
-      position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
-      display:flex;justify-content:center;gap:10px;padding:10px;z-index:10
-    }
-    .nav .tab{flex:1;max-width:240px}
-    .tab .btn{width:100%}
-  </style>
+  /* Bottom nav */
+  .nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:center;padding:10px;z-index:10}
+  .nav .tab{flex:1;max-width:240px}
+  .nav .btn{width:100%}
+</style>
 </head>
 
 <body>
-  <div class="topbar">
-    <div class="inner">
-      <div class="brand">🏫 南門國小拼字挑戰Go</div>
-      <div style="flex:1"></div>
-      <div class="pill" title="目前學生">
-        👧👦 <span id="who">未登入</span>
+<div class="top">
+  <div class="in">
+    <div class="brand">🏫 南門國小拼字挑戰Go</div>
+    <div class="sp"></div>
+    <div class="pill">👧👦 <span id="who">未登入</span></div>
+    <button class="btn small ghost" id="switchBtn">切換/登入</button>
+    <button class="btn small ghost" id="teacherBtn">👩‍🏫 老師後台</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <section id="vLogin" class="grid">
+    <div class="card">
+      <div class="center">
+        <div style="font-weight:950;font-size:22px">開始挑戰！</div>
+        <div class="muted" style="font-weight:900;margin-top:6px">輸入名字即可遊玩（同一台可多位學生切換）</div>
       </div>
-      <button class="btn small ghost" id="switchBtn">切換/登入</button>
-      <button class="btn small ghost" id="teacherBtn">👩‍🏫 老師後台</button>
+      <div class="divider"></div>
+      <input id="nameInput" class="input" placeholder="例如：小明 / Emma" autocomplete="off">
+      <button class="btn primary" id="loginBtn">✅ 進入地圖</button>
+      <div class="muted" style="font-weight:900;font-size:13px;line-height:1.5">
+        ※ 純前端版本：不同手機不會自動同步。老師可用「匯出/匯入 JSON」彙整多台資料。
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="wrap">
-
-    <!-- LOGIN -->
-    <section id="view-login" class="grid">
-      <div class="card">
-        <h1 class="title center">開始挑戰！</h1>
-        <p class="subtitle center">輸入名字就能玩（同一台可多位學生切換）</p>
-        <div class="divider"></div>
-        <div class="grid">
-          <input id="nameInput" class="spellInput" placeholder="例如：小明 / Emma" />
-          <button class="btn primary bigBtn" id="loginBtn">✅ 進入地圖</button>
-          <div class="muted" style="font-weight:800;font-size:13px;line-height:1.4">
-            ※ 不同手機的進度不會自動互通（除非你另外接雲端）。<br/>
-            老師後台可「匯出CSV」或「匯入/匯出JSON」彙整。
-          </div>
+  <!-- MAP -->
+  <section id="vMap" class="grid hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-weight:950;font-size:18px">🗺️ 關卡地圖（100關）</div>
+          <div class="muted" style="font-weight:900;font-size:13px">每關 10 題；A/B/C/D 隨機；通關解鎖下一關；已通關可重玩。</div>
         </div>
+        <button class="btn ghost" id="resumeBtn">▶️ 續玩最後一關</button>
       </div>
-    </section>
 
-    <!-- MAP -->
-    <section id="view-map" class="grid hidden">
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <div style="font-weight:950;font-size:18px">🗺️ 關卡地圖（100關）</div>
-            <div class="muted" style="font-weight:800;font-size:13px">每關 10 題，A/B/C/D 隨機；通關解鎖下一關；已通關可重玩。</div>
-          </div>
-          <button class="btn ghost" id="resumeBtn">▶️ 續玩最後一關</button>
-        </div>
-
-        <div class="mapLegend">
-          <span class="dot done"></span>已通關
-          <span class="dot now" style="margin-left:10px"></span>可挑戰
-          <span class="dot lock" style="margin-left:10px"></span>未解鎖
-        </div>
-
-        <div class="mapWrap">
-          <svg class="mapPath" id="pathSvg"></svg>
-          <div class="map" id="mapGrid"></div>
-        </div>
+      <div class="legend">
+        <span class="dot done"></span>已通關
+        <span class="dot now"></span>可挑戰
+        <span class="dot lock"></span>未解鎖
       </div>
-    </section>
 
-    <!-- GAME -->
-    <section id="view-game" class="grid hidden">
-      <div class="card">
-        <div class="hud">
-          <div class="row" style="gap:10px;align-items:center">
-            <span class="pill">🎯 第 <span id="gLevel">1</span> 關</span>
-            <span class="pill">🔁 第 <span id="gAttempt">1</span> 次</span>
-            <span class="modeTag" id="gMode">A</span>
-          </div>
+      <div class="map" id="mapGrid"></div>
+    </div>
+  </section>
 
-          <div class="progressBar" title="本關進度">
-            <div id="barFill"></div>
-          </div>
-
-          <div class="pill">⏱️ <span class="timer" id="gTimer">00:00</span></div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div id="gameArea"></div>
-
-        <div class="divider"></div>
-
-        <div class="row" style="justify-content:space-between">
-          <button class="btn ghost" id="backToMapBtn">⬅️ 回地圖</button>
-          <button class="btn primary" id="nextBtn">➡️ 下一題</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TEACHER -->
-    <section id="view-teacher" class="grid hidden">
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <div style="font-weight:950;font-size:18px">👩‍🏫 老師後台</div>
-            <div class="muted" style="font-weight:800;font-size:13px">本頁讀取的是「這台裝置」的資料；可匯出CSV、匯入/匯出JSON彙整其他手機資料。</div>
-          </div>
-          <button class="btn danger" id="wipeBtn">清空本機資料</button>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="kpi">
-          <div class="box">
-            <div class="num" id="kStudents">0</div>
-            <div class="lbl">學生數（本機）</div>
-          </div>
-          <div class="box">
-            <div class="num" id="kLogs">0</div>
-            <div class="lbl">作答紀錄筆數</div>
-          </div>
-          <div class="box">
-            <div class="num" id="kPass">0</div>
-            <div class="lbl">通關總數（累計）</div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
+  <!-- GAME -->
+  <section id="vGame" class="grid hidden">
+    <div class="card">
+      <div class="hud">
         <div class="row">
-          <button class="btn primary" id="exportCsvBtn">📤 匯出 Excel(CSV)</button>
-          <button class="btn ghost" id="exportJsonBtn">📦 匯出 JSON（彙整用）</button>
-          <label class="btn ghost" style="cursor:pointer">
-            📥 匯入 JSON
-            <input type="file" id="importJsonFile" accept="application/json" style="display:none">
-          </label>
+          <span class="pill">🎯 第 <span id="gLevel">1</span> 關</span>
+          <span class="pill">🔁 第 <span id="gAttempt">1</span> 次</span>
+          <span class="modeTag" id="gMode">A</span>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="grid">
-          <div class="row" style="justify-content:space-between">
-            <div style="font-weight:950">學生進度總覽</div>
-            <div class="muted" style="font-weight:800;font-size:13px">點學生可看近30筆作答</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>學生</th>
-                <th>已通關</th>
-                <th>最佳平均正確率</th>
-                <th>最後遊玩</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="stuTable"></tbody>
-          </table>
-        </div>
-
-        <div class="divider"></div>
-
-        <div id="stuDetail" class="hidden">
-          <div class="row" style="justify-content:space-between">
-            <div style="font-weight:950">📌 明細：<span id="stuName"></span></div>
-            <button class="btn ghost" id="closeDetailBtn">關閉</button>
-          </div>
-          <div class="divider"></div>
-          <table>
-            <thead>
-              <tr>
-                <th>時間</th>
-                <th>關卡</th>
-                <th>回合</th>
-                <th>題型</th>
-                <th>題目</th>
-                <th>正確</th>
-              </tr>
-            </thead>
-            <tbody id="logTable"></tbody>
-          </table>
-        </div>
-
+        <div class="bar"><div id="barFill"></div></div>
+        <div class="pill">⏱️ <span class="timer" id="gTimer">00:00</span></div>
       </div>
-    </section>
 
-  </div>
+      <div class="divider"></div>
+      <div id="gameArea"></div>
 
-  <div class="nav">
-    <div class="tab"><button class="btn ghost" id="tabMap">🗺️ 地圖</button></div>
-    <div class="tab"><button class="btn ghost" id="tabGame">🎮 關卡</button></div>
-    <div class="tab"><button class="btn ghost" id="tabTeacher">👩‍🏫 老師</button></div>
-  </div>
+      <div class="divider"></div>
+      <div class="row" style="justify-content:space-between">
+        <button class="btn ghost" id="backToMapBtn">⬅️ 回地圖</button>
+        <button class="btn primary" id="nextBtn" disabled>➡️ 下一題</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEACHER -->
+  <section id="vTeacher" class="grid hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-weight:950;font-size:18px">👩‍🏫 老師後台</div>
+          <div class="muted" style="font-weight:900;font-size:13px">本頁讀取「這台裝置」資料；可匯出CSV、匯入/匯出JSON彙整其他手機資料。</div>
+        </div>
+        <button class="btn danger" id="wipeBtn">清空本機資料</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="kpi">
+        <div class="box"><div class="num" id="kStudents">0</div><div class="lbl">學生數（本機）</div></div>
+        <div class="box"><div class="num" id="kLogs">0</div><div class="lbl">作答紀錄筆數</div></div>
+        <div class="box"><div class="num" id="kPass">0</div><div class="lbl">通關總數（累計）</div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <button class="btn primary" id="exportCsvBtn">📤 匯出 Excel（CSV）</button>
+        <button class="btn ghost" id="exportJsonBtn">📦 匯出 JSON（彙整）</button>
+        <label class="btn ghost" style="cursor:pointer">
+          📥 匯入 JSON
+          <input type="file" id="importJsonFile" accept="application/json" style="display:none">
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:950">學生進度總覽</div>
+        <div class="muted" style="font-weight:900;font-size:13px">點「查看」顯示近 30 筆紀錄</div>
+      </div>
+
+      <table>
+        <thead><tr>
+          <th>學生</th><th>已通關</th><th>估計正確率</th><th>最後遊玩</th><th></th>
+        </tr></thead>
+        <tbody id="stuTable"></tbody>
+      </table>
+
+      <div class="divider"></div>
+
+      <div id="stuDetail" class="hidden">
+        <div class="row" style="justify-content:space-between">
+          <div style="font-weight:950">📌 明細：<span id="stuName"></span></div>
+          <button class="btn ghost small" id="closeDetailBtn">關閉</button>
+        </div>
+        <div class="divider"></div>
+        <table>
+          <thead><tr>
+            <th>時間</th><th>關卡</th><th>回合</th><th>題型</th><th>題目</th><th>結果</th>
+          </tr></thead>
+          <tbody id="logTable"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <div class="tab"><button class="btn ghost" id="tabMap">🗺️ 地圖</button></div>
+  <div class="tab"><button class="btn ghost" id="tabGame">🎮 關卡</button></div>
+  <div class="tab"><button class="btn ghost" id="tabTeacher">👩‍🏫 老師</button></div>
+</div>
 
 <script>
-/* ===========================
-   1) 153 字完整題庫（來自你PDF）
-   =========================== */
+/* =========================
+   153 字完整題庫
+   ========================= */
 const WORD_BANK = [
   {"en":"able","zh":"能夠"},{"en":"all","zh":"所有"},{"en":"after","zh":"在…之後"},{"en":"and","zh":"和"},{"en":"any","zh":"任何"},
   {"en":"ant","zh":"螞蟻"},{"en":"apple","zh":"蘋果"},{"en":"April","zh":"四月"},{"en":"ask","zh":"問"},{"en":"at","zh":"在"},
@@ -347,18 +278,24 @@ const WORD_BANK = [
   {"en":"tub","zh":"浴缸"},{"en":"turtle","zh":"烏龜"},{"en":"up","zh":"上面"},{"en":"yellow","zh":"黃色"}
 ];
 
-/* ===========================
-   2) App 設定
-   =========================== */
+/* =========================
+   設定
+   ========================= */
 const TOTAL_LEVELS = 100;
 const QUESTIONS_PER_LEVEL = 10;
-const MODES = ["A","B","C","D"]; // A 聽選中(不顯英), B 英選中, C 配對, D 聽拼字
+const MODES = ["A","B","C","D"];
 
-const LS_STATE = "nmpsg_state_v2";
-const LS_LOGS  = "nmpsg_logs_v2";
+const LS_STATE = "nmpsg_state_v3";
+const LS_LOGS  = "nmpsg_logs_v3";
 
-function nowISO(){ return new Date().toISOString(); }
-function randInt(n){ return Math.floor(Math.random()*n); }
+/* =========================
+   工具
+   ========================= */
+const $ = (id)=>document.getElementById(id);
+const nowISO = ()=> new Date().toISOString();
+const pad2 = (x)=> String(x).padStart(2,"0");
+const mmss = (ms)=>{ const s=Math.floor(ms/1000); return `${pad2(Math.floor(s/60))}:${pad2(s%60)}`; };
+const safeLower=(s)=>String(s||"").trim().toLowerCase();
 function shuffle(arr){
   const a=[...arr];
   for(let i=a.length-1;i>0;i--){
@@ -367,202 +304,236 @@ function shuffle(arr){
   }
   return a;
 }
-function pad2(x){ return String(x).padStart(2,"0"); }
-function mmss(ms){
-  const s=Math.floor(ms/1000);
-  return `${pad2(Math.floor(s/60))}:${pad2(s%60)}`;
-}
-function safeLower(s){ return String(s||"").trim().toLowerCase(); }
+function toast(msg){ alert(msg); }
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
 
+/* =========================
+   狀態/紀錄
+   ========================= */
 function loadState(){
-  const raw = localStorage.getItem(LS_STATE);
+  const raw=localStorage.getItem(LS_STATE);
   if(raw){ try{return JSON.parse(raw);}catch(e){} }
   return { currentStudent:null, students:{} };
 }
 function saveState(s){ localStorage.setItem(LS_STATE, JSON.stringify(s)); }
 function loadLogs(){
-  const raw = localStorage.getItem(LS_LOGS);
+  const raw=localStorage.getItem(LS_LOGS);
   if(raw){ try{return JSON.parse(raw);}catch(e){} }
   return [];
 }
 function saveLogs(l){ localStorage.setItem(LS_LOGS, JSON.stringify(l)); }
 
-/* ===========================
-   3) UI router
-   =========================== */
-const viewLogin = document.getElementById("view-login");
-const viewMap = document.getElementById("view-map");
-const viewGame = document.getElementById("view-game");
-const viewTeacher = document.getElementById("view-teacher");
-
-function show(view){
-  [viewLogin,viewMap,viewGame,viewTeacher].forEach(v=>v.classList.add("hidden"));
-  view.classList.remove("hidden");
-}
-function toast(msg){
-  alert(msg);
-}
-
-/* ===========================
-   4) Student / Progress model
-   =========================== */
 function ensureStudent(state, name){
   if(!state.students[name]){
-    state.students[name] = {
-      createdAt: nowISO(),
-      lastSeen: nowISO(),
-      passed: {},          // {level:true}
-      attempts: {},        // {level:count}
-      best: {},            // {level:{score,timeMs}}
-      lastLevel: 1
+    state.students[name]={
+      createdAt:nowISO(), lastSeen:nowISO(),
+      passed:{}, attempts:{}, best:{}, lastLevel:1
     };
   }
-  state.students[name].lastSeen = nowISO();
+  state.students[name].lastSeen=nowISO();
   return state.students[name];
 }
-function currentStudent(state){
-  const n = state.currentStudent;
+function currentStudentObj(state){
+  const n=state.currentStudent;
   if(!n) return null;
-  return state.students[n] || null;
+  return state.students[n]||null;
 }
 function maxUnlocked(stu){
-  // level1 always unlocked
-  let unlocked = 1;
+  let unlocked=1;
   for(let i=1;i<=TOTAL_LEVELS;i++){
-    if(stu.passed[i]) unlocked = Math.min(TOTAL_LEVELS, i+1);
+    if(stu.passed[i]) unlocked=Math.min(TOTAL_LEVELS, i+1);
   }
   return Math.min(TOTAL_LEVELS, unlocked);
 }
 
-/* ===========================
-   5) Speech (TTS)
-   =========================== */
-function speakEN(word){
+/* =========================
+   發音（最清楚版 + 前台調速）
+   ========================= */
+let SPEECH_RATE = Number(localStorage.getItem("speechRate")) || 0.65;
+function pickVoice(){
   const voices = speechSynthesis.getVoices();
-
-  // 優先選擇清楚的美式女聲（iOS 最佳是 Samantha）
-  const voice =
-    voices.find(v => v.lang === "en-US" && v.name.includes("Samantha")) ||
-    voices.find(v => v.lang === "en-US" && /female|woman/i.test(v.name)) ||
-    voices.find(v => v.lang === "en-US") ||
-    voices[0];
-
-  // 第一次：慢速、很清楚
+  return (
+    voices.find(v=>v.lang==="en-US" && v.name.includes("Samantha")) ||
+    voices.find(v=>v.lang==="en-US" && /female|woman/i.test(v.name)) ||
+    voices.find(v=>v.lang==="en-US") ||
+    voices[0]
+  );
+}
+function speakEN(word){
+  const voice = pickVoice();
   const slow = new SpeechSynthesisUtterance(word);
-  slow.voice = voice;
-  slow.lang = "en-US";
-  slow.rate = 0.65;   // ⭐ 關鍵：慢
-  slow.pitch = 1.0;
-  slow.volume = 1.0;
+  slow.voice=voice; slow.lang="en-US";
+  slow.rate=SPEECH_RATE; slow.pitch=1.0; slow.volume=1.0;
 
-  // 第二次：接近正常速度，幫助銜接
   const normal = new SpeechSynthesisUtterance(word);
-  normal.voice = voice;
-  normal.lang = "en-US";
-  normal.rate = 0.9;
-  normal.pitch = 1.0;
-  normal.volume = 1.0;
+  normal.voice=voice; normal.lang="en-US";
+  normal.rate=Math.min(SPEECH_RATE+0.2, 1.2);
+  normal.pitch=1.0; normal.volume=1.0;
 
-  // 播放
   speechSynthesis.cancel();
   speechSynthesis.speak(slow);
   speechSynthesis.speak(normal);
 }
 
-/* ===========================
-   6) Level generator (10 questions)
-   - 每關固定10題
-   - 模式隨機
-   - 字不重複（同一關）
-   =========================== */
-function makeLevel(level, attempt){
-  // deterministic-ish seed: use level+attempt but still random enough for replay
-  // We'll pick 10 unique words:
-  let pool = shuffle(WORD_BANK);
-  const picked = pool.slice(0, QUESTIONS_PER_LEVEL);
-
-  // Build 10 questions each with random mode
-  const qs = [];
+/* =========================
+   關卡生成（每關固定10題、同關不重複字）
+   ========================= */
+function makeLevelQuestions(level, attempt){
+  const picked = shuffle(WORD_BANK).slice(0, QUESTIONS_PER_LEVEL);
+  const qs=[];
   for(let i=0;i<QUESTIONS_PER_LEVEL;i++){
-    const w = picked[i];
-    const mode = MODES[randInt(MODES.length)];
-    qs.push({ idx:i+1, mode, word:w });
+    qs.push({idx:i+1, mode: MODES[Math.floor(Math.random()*MODES.length)], word: picked[i]});
   }
   return qs;
 }
 
-/* ===========================
-   7) Game engine
-   =========================== */
-let G = {
-  level:1, attempt:1, qIndex:0, qs:[],
-  score:0, startMs:0, tickTimer:null,
-  qStartMs:0,
-};
+/* =========================
+   Router
+   ========================= */
+const vLogin=$("vLogin"), vMap=$("vMap"), vGame=$("vGame"), vTeacher=$("vTeacher");
+function show(view){
+  [vLogin,vMap,vGame,vTeacher].forEach(v=>v.classList.add("hidden"));
+  view.classList.remove("hidden");
+}
+function refreshHeader(){
+  const state=loadState();
+  $("who").textContent = state.currentStudent || "未登入";
+}
 
-const gLevel = document.getElementById("gLevel");
-const gAttempt = document.getElementById("gAttempt");
-const gMode = document.getElementById("gMode");
-const gTimer = document.getElementById("gTimer");
-const barFill = document.getElementById("barFill");
-const gameArea = document.getElementById("gameArea");
-const nextBtn = document.getElementById("nextBtn");
+/* =========================
+   地圖
+   ========================= */
+function drawMap(){
+  const state=loadState();
+  const stu=currentStudentObj(state);
+  if(!stu){ show(vLogin); return; }
+
+  const unlocked=maxUnlocked(stu);
+  const grid=$("mapGrid");
+  grid.innerHTML="";
+
+  for(let i=1;i<=TOTAL_LEVELS;i++){
+    const node=document.createElement("div");
+    node.className="node";
+    const isDone=!!stu.passed[i];
+    const isLock=i>unlocked;
+    const isNow=(!isDone && !isLock);
+    if(isDone) node.classList.add("done");
+    else if(isNow) node.classList.add("now");
+    else node.classList.add("lock");
+
+    node.textContent=i;
+
+    const a=stu.attempts[i]||0;
+    const badge=document.createElement("div");
+    badge.className="badge";
+    badge.textContent=`x${a}`;
+    if(!a) badge.style.display="none";
+    node.appendChild(badge);
+
+    node.onclick=()=>{
+      if(isLock) return;
+      startGame(i);
+    };
+    grid.appendChild(node);
+  }
+}
+function showMap(){
+  show(vMap);
+  drawMap();
+}
+
+/* =========================
+   遊戲引擎
+   ========================= */
+const gLevel=$("gLevel"), gAttempt=$("gAttempt"), gMode=$("gMode");
+const gTimer=$("gTimer"), barFill=$("barFill"), gameArea=$("gameArea"), nextBtn=$("nextBtn");
+
+let G = { level:1, attempt:1, qs:[], qIndex:0, score:0, startMs:0, tick:null, qStartMs:0, locked:false };
 
 function startTimer(){
-  G.startMs = performance.now();
-  if(G.tickTimer) clearInterval(G.tickTimer);
-  G.tickTimer = setInterval(()=>{
-    const t = performance.now() - G.startMs;
-    gTimer.textContent = mmss(t);
-  }, 250);
+  G.startMs=performance.now();
+  if(G.tick) clearInterval(G.tick);
+  G.tick=setInterval(()=>{ gTimer.textContent=mmss(performance.now()-G.startMs); }, 250);
 }
-function stopTimer(){
-  if(G.tickTimer) clearInterval(G.tickTimer);
-  G.tickTimer=null;
-}
+function stopTimer(){ if(G.tick) clearInterval(G.tick); G.tick=null; }
 function setProgress(){
-  const pct = Math.round((G.qIndex/QUESTIONS_PER_LEVEL)*100);
-  barFill.style.width = pct + "%";
+  const pct=Math.round((G.qIndex/QUESTIONS_PER_LEVEL)*100);
+  barFill.style.width=pct+"%";
 }
-function logAnswer({student, level, attempt, qIndex, mode, en, zh, correct, ms, extra}){
-  const logs = loadLogs();
-  logs.push({ts: nowISO(), student, level, attempt, qIndex, mode, en, zh, correct, ms, extra: extra||null});
+function logAnswer(entry){
+  const logs=loadLogs();
+  logs.push(entry);
   saveLogs(logs);
 }
-function finishLevel(){
-  const state = loadState();
-  const stu = ensureStudent(state, state.currentStudent);
-  const totalMs = performance.now() - G.startMs;
 
-  // best record
-  const prev = stu.best[G.level];
-  const score = G.score;
-  if(!prev || score>prev.score || (score===prev.score && totalMs<prev.timeMs)){
-    stu.best[G.level] = { score, timeMs: Math.round(totalMs) };
+function modeName(m){
+  if(m==="A") return "A 聽→選中文（不顯英）";
+  if(m==="B") return "B 看英→選中文";
+  if(m==="C") return "C 英中配對";
+  if(m==="D") return "D 聽→拼英文";
+  return m;
+}
+
+function startGame(level){
+  const state=loadState();
+  if(!state.currentStudent){ show(vLogin); return; }
+  const stu=ensureStudent(state, state.currentStudent);
+
+  const prev=stu.attempts[level]||0;
+  stu.attempts[level]=prev+1;
+  stu.lastLevel=level;
+  saveState(state);
+
+  G.level=level;
+  G.attempt=stu.attempts[level];
+  G.qs=makeLevelQuestions(level, G.attempt);
+  G.qIndex=0;
+  G.score=0;
+  G.locked=false;
+
+  gLevel.textContent=level;
+  gAttempt.textContent=G.attempt;
+
+  show(vGame);
+  nextBtn.disabled=true;
+  nextBtn.textContent="➡️ 下一題";
+  startTimer();
+  renderQuestion();
+}
+
+function finishLevel(){
+  stopTimer();
+  const state=loadState();
+  const stu=ensureStudent(state, state.currentStudent);
+  const totalMs=Math.round(performance.now()-G.startMs);
+
+  // best
+  const prev=stu.best[G.level];
+  if(!prev || G.score>prev.score || (G.score===prev.score && totalMs<prev.timeMs)){
+    stu.best[G.level]={score:G.score,timeMs:totalMs};
   }
 
-  // pass rule: 7/10 or above (you can change)
-  const passed = (score >= 7);
+  const passed = (G.score>=7); // 可自行調整通關門檻
   if(passed){
-    stu.passed[G.level] = true;
-    stu.lastLevel = Math.min(TOTAL_LEVELS, G.level+1);
+    stu.passed[G.level]=true;
+    stu.lastLevel=Math.min(TOTAL_LEVELS, G.level+1);
   }else{
-    stu.lastLevel = G.level;
+    stu.lastLevel=G.level;
   }
   saveState(state);
 
-  // result screen
-  gameArea.innerHTML = `
+  barFill.style.width="100%";
+  const color=passed?"var(--green)":"var(--red)";
+  gameArea.innerHTML=`
     <div class="center">
-      <div style="font-weight:950;font-size:20px">🎉 第 ${G.level} 關完成！</div>
+      <div style="font-weight:950;font-size:22px">🎉 第 ${G.level} 關完成</div>
       <div class="divider"></div>
-      <div style="font-weight:950;font-size:18px">得分：${score}/${QUESTIONS_PER_LEVEL}</div>
-      <div class="muted" style="font-weight:800;margin-top:6px">時間：${mmss(totalMs)}</div>
+      <div style="font-weight:950;font-size:18px">得分：${G.score}/${QUESTIONS_PER_LEVEL}</div>
+      <div class="muted" style="font-weight:900;margin-top:6px">時間：${mmss(totalMs)}</div>
       <div class="divider"></div>
-      <div style="font-weight:900;color:${passed?'var(--green)':'var(--red)'}">
-        ${passed ? "✅ 通關成功！已解鎖下一關" : "❌ 未通關（建議再挑戰一次）"}
-      </div>
-      <div class="muted" style="font-weight:800;margin-top:8px">本關仍可重玩（第 N 次挑戰會另外記錄）</div>
+      <div style="font-weight:950;color:${color}">${passed?"✅ 通關成功！已解鎖下一關":"❌ 未通關（建議再挑戰一次）"}</div>
+      <div class="muted" style="font-weight:900;margin-top:8px">本關可重玩（第 N 次會另外記錄）</div>
       <div class="divider"></div>
       <div class="row" style="justify-content:center">
         <button class="btn ghost" id="retryBtn">🔁 重玩本關</button>
@@ -570,79 +541,39 @@ function finishLevel(){
       </div>
     </div>
   `;
-  nextBtn.classList.add("hidden");
-
-  document.getElementById("retryBtn").onclick=()=>startGame(G.level, true);
-  document.getElementById("toMapBtn").onclick=()=>{ stopTimer(); showMap(); };
+  nextBtn.disabled=true;
+  $("retryBtn").onclick=()=>startGame(G.level);
+  $("toMapBtn").onclick=()=>showMap();
 }
 
-function startGame(level, forceNewAttempt){
-  const state = loadState();
-  if(!state.currentStudent){ show(viewLogin); return; }
-  const stu = ensureStudent(state, state.currentStudent);
-
-  // attempt count
-  const prev = stu.attempts[level] || 0;
-  const attempt = forceNewAttempt ? (prev+1) : (prev+1);
-  stu.attempts[level] = attempt;
-  stu.lastLevel = level;
-  saveState(state);
-
-  // init
-  G.level = level;
-  G.attempt = attempt;
-  G.qIndex = 0;
-  G.qs = makeLevel(level, attempt);
-  G.score = 0;
-
-  gLevel.textContent = level;
-  gAttempt.textContent = attempt;
-  show(viewGame);
-  nextBtn.classList.remove("hidden");
-  nextBtn.textContent = "➡️ 下一題";
-  nextBtn.disabled = true;
-
-  startTimer();
+function next(){
+  if(G.locked) return; // 防誤觸
+  if(G.qIndex>=QUESTIONS_PER_LEVEL-1){
+    finishLevel();
+    return;
+  }
+  G.qIndex++;
   renderQuestion();
 }
 
-function renderQuestion(){
-  setProgress();
-  nextBtn.disabled = true;
-  const q = G.qs[G.qIndex];
-  gMode.textContent = `${q.mode} ${modeName(q.mode)}`;
-  G.qStartMs = performance.now();
-
-  if(q.mode==="A") renderModeA(q);
-  if(q.mode==="B") renderModeB(q);
-  if(q.mode==="C") renderModeC(q);
-  if(q.mode==="D") renderModeD(q);
-}
-
-function modeName(m){
-  if(m==="A") return "聽 → 選中文（不顯示英文）";
-  if(m==="B") return "看英文 → 選中文";
-  if(m==="C") return "英文 ↔ 中文配對";
-  if(m==="D") return "聽 → 拼英文";
-  return "";
-}
+nextBtn.onclick=next;
 
 function makeZhOptions(correctZh){
-  // 1 correct + 3 distractors
-  const zhPool = shuffle(WORD_BANK.map(x=>x.zh).filter(z=>z!==correctZh));
-  const opts = shuffle([correctZh, zhPool[0], zhPool[1], zhPool[2]]);
+  const pool=shuffle(WORD_BANK.map(w=>w.zh).filter(z=>z!==correctZh));
+  const opts=shuffle([correctZh,pool[0],pool[1],pool[2]]);
   return opts;
 }
-function answerCommon({correct, correctText, showCorrectAlso, chosenText}){
-  const state = loadState();
-  const stuName = state.currentStudent;
-  const q = G.qs[G.qIndex];
-  const elapsed = performance.now() - G.qStartMs;
 
-  if(correct) G.score += 1;
+function answerFeedback(correct, correctText, chosenText){
+  const state=loadState();
+  const q=G.qs[G.qIndex];
+  const elapsed=Math.round(performance.now()-G.qStartMs);
+
+  if(correct) G.score++;
 
   logAnswer({
-    student: stuName,
+    ts: nowISO(),
+    student: state.currentStudent,
     level: G.level,
     attempt: G.attempt,
     qIndex: q.idx,
@@ -650,422 +581,351 @@ function answerCommon({correct, correctText, showCorrectAlso, chosenText}){
     en: q.word.en,
     zh: q.word.zh,
     correct,
-    ms: Math.round(elapsed),
-    extra: chosenText ? {chosen:chosenText} : null
+    ms: elapsed,
+    extra: chosenText ? {chosen: chosenText} : null
   });
 
-  // feedback block
-  const fb = document.createElement("div");
-  fb.className = "center";
-  fb.style.marginTop = "12px";
-  fb.innerHTML = correct
-    ? `<div style="color:var(--green);font-weight:950;font-size:18px">✅ 對了！</div>`
-    : `<div style="color:var(--red);font-weight:950;font-size:18px">❌ 錯了</div>
-       <div class="muted" style="font-weight:900;margin-top:6px">正確答案：<span style="color:var(--ink)">${correctText}</span></div>`;
-  gameArea.appendChild(fb);
+  const hint=document.createElement("div");
+  hint.className="hint "+(correct?"ok":"bad");
+  hint.innerHTML = correct ? "✅ 答對！" : `❌ 錯了，正確答案：<span style="color:var(--ink)">${esc(correctText)}</span>`;
+  gameArea.appendChild(hint);
 
-  nextBtn.disabled = false;
+  nextBtn.disabled=false;
   nextBtn.textContent = (G.qIndex===QUESTIONS_PER_LEVEL-1) ? "✅ 結算本關" : "➡️ 下一題";
+  G.locked=true;
+  setTimeout(()=>{ G.locked=false; }, 250);
 }
 
-function next(){
-  if(G.qIndex===QUESTIONS_PER_LEVEL-1){
-    setProgress();
-    barFill.style.width="100%";
-    stopTimer();
-    finishLevel();
-    return;
-  }
-  G.qIndex += 1;
-  renderQuestion();
+/* ----------- 四種題型渲染 ----------- */
+function renderQuestion(){
+  setProgress();
+  nextBtn.disabled=true;
+
+  const q=G.qs[G.qIndex];
+  gMode.textContent = modeName(q.mode);
+  G.qStartMs=performance.now();
+
+  if(q.mode==="A") renderA(q);
+  if(q.mode==="B") renderB(q);
+  if(q.mode==="C") renderC(q);
+  if(q.mode==="D") renderD(q);
 }
 
-nextBtn.onclick = next;
-
-/* ---- Mode A: Listen -> pick Chinese (NO English shown) ---- */
-function renderModeA(q){
-  const zhOpts = makeZhOptions(q.word.zh);
-  gameArea.innerHTML = `
+/* A：聽→選中文（不顯示英文） */
+function renderA(q){
+  const opts=makeZhOptions(q.word.zh);
+  gameArea.innerHTML=`
     <div class="center">
-      <div class="qTitle">🔊</div>
-      <p class="helpText">聽英文後，選出正確中文意思（不會顯示英文單字）</p>
-      <button class="btn primary bigBtn" id="playBtn">🔊 播放</button>
+      <div class="qBig">🔊</div>
+      <p class="help">聽英文後，選出正確中文意思（不會顯示英文單字）</p>
+      <button class="btn primary" id="playBtn">🔊 播放</button>
+      <div class="speedBox">
+        🎚️ 發音速度
+        <input type="range" id="speechRate" min="0.5" max="1.1" step="0.05">
+        <span id="rateLabel"></span>
+      </div>
       <div style="height:10px"></div>
-      <div class="options" id="opts"></div>
+      <div class="opts" id="opts"></div>
     </div>
   `;
-  document.getElementById("playBtn").onclick = ()=>speakEN(q.word.en);
-  const opts = document.getElementById("opts");
-  zhOpts.forEach(z=>{
-    const b = document.createElement("button");
-    b.className="opt";
-    b.textContent=z;
-    b.onclick=()=>{
-      const correct = (z===q.word.zh);
-      b.classList.add(correct?"correct":"wrong");
-      // mark others
-      [...opts.children].forEach(x=>x.disabled=true);
-      answerCommon({
-        correct,
-        correctText:`${q.word.zh}（${q.word.en}）`,
-        chosenText:z
-      });
-    };
-    opts.appendChild(b);
-  });
-}
-
-/* ---- Mode B: Show English -> pick Chinese ---- */
-function renderModeB(q){
-  const zhOpts = makeZhOptions(q.word.zh);
-  gameArea.innerHTML = `
-    <div class="center">
-      <div class="qTitle">${escapeHTML(q.word.en)}</div>
-      <p class="helpText">看英文，選出正確中文意思</p>
-      <div class="options" id="opts"></div>
-    </div>
-  `;
-  const opts = document.getElementById("opts");
-  zhOpts.forEach(z=>{
+  $("playBtn").onclick=()=>speakEN(q.word.en);
+  wireSpeechRateUI();
+  const box=$("opts");
+  opts.forEach(z=>{
     const b=document.createElement("button");
     b.className="opt";
     b.textContent=z;
     b.onclick=()=>{
-      const correct = (z===q.word.zh);
+      [...box.children].forEach(x=>x.disabled=true);
+      const correct=(z===q.word.zh);
       b.classList.add(correct?"correct":"wrong");
-      [...opts.children].forEach(x=>x.disabled=true);
-      answerCommon({
-        correct,
-        correctText:`${q.word.zh}（${q.word.en}）`,
-        chosenText:z
-      });
+      // A 模式錯了不顯示英文在題面，但正確答案區可用（你同意顯示正解即可）
+      answerFeedback(correct, q.word.zh, z);
     };
-    opts.appendChild(b);
+    box.appendChild(b);
   });
 }
 
-/* ---- Mode C: Matching 5 pairs (counts as 1 question) ---- */
-function renderModeC(q){
-  // pick 5 unique words (including current)
-  let pool = shuffle(WORD_BANK.filter(w=>w.en!==q.word.en));
-  const five = [q.word, ...pool.slice(0,4)];
-  const left = shuffle(five.map(w=>({k:w.en, t:w.en, pair:w.zh, side:"L"})));
-  const right = shuffle(five.map(w=>({k:w.zh, t:w.zh, pair:w.en, side:"R"})));
-
-  let sel = null;
-  let matched = 0;
-  let combo = 0;
-
-  gameArea.innerHTML = `
+/* B：看英文→選中文 */
+function renderB(q){
+  const opts=makeZhOptions(q.word.zh);
+  gameArea.innerHTML=`
     <div class="center">
-      <div style="font-weight:950;font-size:22px;margin-top:6px">🔗 配對</div>
-      <p class="helpText">把英文和中文配對（完成5組算本題完成）</p>
-      <div class="combo">連擊：<span id="combo">0</span></div>
-      <div style="height:8px"></div>
-      <div class="matchGrid" id="mg"></div>
+      <div class="qBig">${esc(q.word.en)}</div>
+      <p class="help">看英文，選出正確中文意思</p>
+      <div class="opts" id="opts"></div>
     </div>
   `;
-  const mg = document.getElementById("mg");
-  const comboEl = document.getElementById("combo");
+  const box=$("opts");
+  opts.forEach(z=>{
+    const b=document.createElement("button");
+    b.className="opt";
+    b.textContent=z;
+    b.onclick=()=>{
+      [...box.children].forEach(x=>x.disabled=true);
+      const correct=(z===q.word.zh);
+      b.classList.add(correct?"correct":"wrong");
+      answerFeedback(correct, `${q.word.en} = ${q.word.zh}`, z);
+    };
+    box.appendChild(b);
+  });
+}
 
-  const tiles = [];
-  function addTile(obj){
-    const d=document.createElement("button");
-    d.className="tile";
-    d.textContent=obj.t;
-    d.dataset.key=obj.k;
-    d.dataset.pair=obj.pair;
-    d.dataset.side=obj.side;
-    d.onclick=()=>{
-      if(d.classList.contains("gone")) return;
+/* C：配對 5 組（完成算本題） */
+function renderC(q){
+  let pool=shuffle(WORD_BANK.filter(w=>w.en!==q.word.en));
+  const five=[q.word, ...pool.slice(0,4)];
+  const left=shuffle(five.map(w=>({txt:w.en,key:w.en,pair:w.zh,side:"L"})));
+  const right=shuffle(five.map(w=>({txt:w.zh,key:w.zh,pair:w.en,side:"R"})));
+
+  let sel=null, matched=0;
+  gameArea.innerHTML=`
+    <div class="center">
+      <div style="font-weight:950;font-size:22px;margin-top:6px">🔗 配對</div>
+      <p class="help">把英文和中文配對（完成 5 組算本題完成）</p>
+      <div class="muted" style="font-weight:900">進度：<span id="mProg">0</span>/5</div>
+      <div style="height:10px"></div>
+      <div class="match" id="mg"></div>
+    </div>
+  `;
+  const mg=$("mg");
+  const mProg=$("mProg");
+
+  function makeTile(obj){
+    const t=document.createElement("button");
+    t.className="tile";
+    t.textContent=obj.txt;
+    t.dataset.key=obj.key;
+    t.dataset.pair=obj.pair;
+    t.dataset.side=obj.side;
+    t.onclick=()=>{
+      if(t.classList.contains("gone")) return;
       if(!sel){
-        sel = d;
-        d.classList.add("sel");
-        return;
+        sel=t; t.classList.add("sel"); return;
       }
-      if(sel===d){ sel.classList.remove("sel"); sel=null; return; }
-
-      // must be opposite sides
-      if(sel.dataset.side===d.dataset.side){
+      if(sel===t){ sel.classList.remove("sel"); sel=null; return; }
+      if(sel.dataset.side===t.dataset.side){
         sel.classList.remove("sel");
-        sel = d;
-        d.classList.add("sel");
-        return;
+        sel=t; t.classList.add("sel"); return;
       }
-
-      const ok = (sel.dataset.pair===d.dataset.key) && (d.dataset.pair===sel.dataset.key);
+      const ok = (sel.dataset.pair===t.dataset.key) && (t.dataset.pair===sel.dataset.key);
       if(ok){
         sel.classList.remove("sel");
         sel.classList.add("gone");
-        d.classList.add("gone");
+        t.classList.add("gone");
+        sel=null;
         matched++;
-        combo++;
-        comboEl.textContent = combo;
-        sel = null;
+        mProg.textContent=matched;
         if(matched===5){
-          // correct = true (always, because matching can't "finish wrong")
-          answerCommon({
-            correct:true,
-            correctText:`配對完成（含：${q.word.zh}（${q.word.en}））`,
-            chosenText:"paired"
-          });
+          // 這題算「答對」結束；但配對過程不另外強制顯示英文/中文
+          answerFeedback(true, `配對完成（含 ${q.word.en} ↔ ${q.word.zh}）`, "paired");
         }
       }else{
-        // wrong match: show correct hint briefly
-        combo=0; comboEl.textContent="0";
-        sel.classList.remove("sel");
-        const a=sel, b=d;
-        a.classList.add("wrong"); b.classList.add("wrong");
-        setTimeout(()=>{ a.classList.remove("wrong"); b.classList.remove("wrong"); }, 450);
-        sel=null;
-        // still can continue; log the mistake without ending the question
-        const state = loadState();
+        // 配錯不結束，只記一筆錯誤log，並提示正確配對（符合你要錯了給正解）
+        const state=loadState();
         logAnswer({
-          student: state.currentStudent,
-          level: G.level,
-          attempt: G.attempt,
-          qIndex: G.qs[G.qIndex].idx,
-          mode: "C",
-          en: q.word.en,
-          zh: q.word.zh,
-          correct: false,
+          ts: nowISO(), student: state.currentStudent,
+          level: G.level, attempt: G.attempt, qIndex: q.idx,
+          mode: "C", en: q.word.en, zh: q.word.zh, correct: false,
           ms: Math.round(performance.now()-G.qStartMs),
-          extra: {mistake:`${a.textContent} x ${b.textContent}`}
+          extra: {mistake: `${sel.textContent} × ${t.textContent}`, correctPair: `${q.word.en} ↔ ${q.word.zh}`}
         });
+        const a=sel, b=t;
+        a.classList.remove("sel");
+        a.classList.add("wrong"); b.classList.add("wrong");
+        setTimeout(()=>{ a.classList.remove("wrong"); b.classList.remove("wrong"); }, 400);
+        sel=null;
+        // 顯示一次提示（不鎖住）
+        const old=document.querySelector(".hint");
+        if(old) old.remove();
+        const h=document.createElement("div");
+        h.className="hint bad";
+        h.innerHTML=`❌ 錯了，正確配對：<span style="color:var(--ink)">${esc(q.word.en)} ↔ ${esc(q.word.zh)}</span>`;
+        gameArea.appendChild(h);
       }
     };
-    mg.appendChild(d);
-    tiles.push(d);
+    return t;
   }
-  left.forEach(addTile);
-  right.forEach(addTile);
+
+  left.forEach(o=>mg.appendChild(makeTile(o)));
+  right.forEach(o=>mg.appendChild(makeTile(o)));
+
+  // 配對題不需要 next 才能結束：完成後 answerFeedback() 會開 nextBtn
 }
 
-/* ---- Mode D: Listen -> spell English ---- */
-function renderModeD(q){
-  gameArea.innerHTML = `
+/* D：聽→拼英文 */
+function renderD(q){
+  gameArea.innerHTML=`
     <div class="center">
-      <div class="qTitle">🔊</div>
-      <p class="helpText">聽英文，拼出英文單字（不看答案）</p>
-      <button class="btn primary bigBtn" id="playBtn">🔊 播放</button>
-      <div style="height:10px"></div>
-      <div class="spellRow">
-        <input class="spellInput" id="spell" placeholder="輸入英文..." autocomplete="off" autocapitalize="none" />
+      <div class="qBig">🔊</div>
+      <p class="help">聽英文，拼出英文單字</p>
+      <button class="btn primary" id="playBtn">🔊 播放</button>
+      <div class="speedBox">
+        🎚️ 發音速度
+        <input type="range" id="speechRate" min="0.5" max="1.1" step="0.05">
+        <span id="rateLabel"></span>
       </div>
       <div style="height:10px"></div>
-      <button class="btn ghost bigBtn" id="checkBtn">✅ 檢查</button>
+      <input id="spell" class="input" placeholder="輸入英文..." autocomplete="off" autocapitalize="none">
+      <div style="height:10px"></div>
+      <button class="btn ghost" id="checkBtn">✅ 檢查</button>
     </div>
   `;
-  document.getElementById("playBtn").onclick=()=>speakEN(q.word.en);
-  const inp=document.getElementById("spell");
-  inp.focus();
-
-  document.getElementById("checkBtn").onclick=()=>{
-    const typed = safeLower(inp.value);
-    const ans = safeLower(q.word.en);
-    const correct = (typed===ans);
-    answerCommon({
-      correct,
-      correctText:`${q.word.en}（${q.word.zh}）`,
-      chosenText:typed
-    });
+  $("playBtn").onclick=()=>speakEN(q.word.en);
+  wireSpeechRateUI();
+  const inp=$("spell"); inp.focus();
+  $("checkBtn").onclick=()=>{
+    const typed=safeLower(inp.value);
+    const ans=safeLower(q.word.en);
+    const correct=(typed===ans);
+    // D 模式錯了顯示正確拼字
+    answerFeedback(correct, q.word.en, typed);
   };
 }
 
-function escapeHTML(s){
-  return String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
-}
+/* 前台速度 slider（每次渲染 A/D 都接上） */
+function wireSpeechRateUI(){
+  const rateInput=$("speechRate");
+  const rateLabel=$("rateLabel");
+  if(!rateInput || !rateLabel) return;
 
-/* ===========================
-   8) MAP UI
-   =========================== */
-const mapGrid = document.getElementById("mapGrid");
-const pathSvg = document.getElementById("pathSvg");
+  rateInput.value = SPEECH_RATE;
+  rateLabel.textContent = SPEECH_RATE.toFixed(2);
 
-function drawMap(){
-  const state = loadState();
-  const stu = currentStudent(state);
-  if(!stu){ show(viewLogin); return; }
+  rateInput.oninput=(e)=>{
+    SPEECH_RATE = Number(e.target.value);
+    localStorage.setItem("speechRate", SPEECH_RATE);
+    rateLabel.textContent = SPEECH_RATE.toFixed(2);
+  };
 
-  const unlocked = maxUnlocked(stu);
-  mapGrid.innerHTML = "";
-  // create nodes
-  for(let i=1;i<=TOTAL_LEVELS;i++){
-    const node = document.createElement("div");
-    node.className = "node";
-    const isDone = !!stu.passed[i];
-    const isNow = (i===unlocked) || (i===1 && !stu.passed[1]);
-    const isLock = (i>unlocked);
-
-    if(isDone) node.classList.add("done");
-    else if(!isLock) node.classList.add("now");
-    else node.classList.add("lock");
-
-    node.textContent = i;
-    const badge = document.createElement("div");
-    badge.className = "badge";
-    const a = stu.attempts[i]||0;
-    badge.textContent = a?`x${a}`:"";
-    if(!a) badge.style.display="none";
-    node.appendChild(badge);
-
-    node.onclick=()=>{
-      if(isLock) return;
-      startGame(i, true);
-    };
-    mapGrid.appendChild(node);
+  // iOS 有時候 voices 要等一下才載入：這裡輕觸一次也能初始化
+  if(typeof speechSynthesis!=="undefined"){
+    speechSynthesis.getVoices();
   }
-
-  // simple decorative path (optional)
-  const rect = mapGrid.getBoundingClientRect();
-  pathSvg.setAttribute("viewBox", `0 0 1000 1400`);
-  pathSvg.innerHTML = `
-    <path d="M120 80 C 420 140, 580 260, 820 340
-             S 640 560, 860 640
-             S 620 860, 800 980
-             S 520 1180, 760 1280"
-          fill="none" stroke="#94a3b8" stroke-width="18" stroke-linecap="round" stroke-dasharray="22 22"/>
-  `;
 }
 
-function showMap(){
-  show(viewMap);
-  drawMap();
-}
-
-/* ===========================
-   9) Teacher Dashboard
-   =========================== */
+/* =========================
+   老師後台
+   ========================= */
 function buildTeacher(){
-  show(viewTeacher);
-  const state = loadState();
-  const logs = loadLogs();
+  show(vTeacher);
+  const state=loadState();
+  const logs=loadLogs();
+  const names=Object.keys(state.students||{});
 
-  const names = Object.keys(state.students||{});
-  document.getElementById("kStudents").textContent = names.length;
-  document.getElementById("kLogs").textContent = logs.length;
+  $("kStudents").textContent=names.length;
+  $("kLogs").textContent=logs.length;
 
   let passCount=0;
-  names.forEach(n=>{
+  names.forEach(n=>passCount+=Object.keys(state.students[n].passed||{}).length);
+  $("kPass").textContent=passCount;
+
+  const tb=$("stuTable");
+  tb.innerHTML="";
+  names.sort((a,b)=>(state.students[b].lastSeen||"").localeCompare(state.students[a].lastSeen||"")).forEach(n=>{
     const s=state.students[n];
-    passCount += Object.keys(s.passed||{}).length;
-  });
-  document.getElementById("kPass").textContent = passCount;
+    const passed=Object.keys(s.passed||{}).length;
+    const last=(s.lastSeen||"").replace("T"," ").slice(0,16);
 
-  const tbody = document.getElementById("stuTable");
-  tbody.innerHTML="";
-  names.sort((a,b)=> (state.students[b].lastSeen||"").localeCompare(state.students[a].lastSeen||"")).forEach(n=>{
-    const s = state.students[n];
-    const passed = Object.keys(s.passed||{}).length;
-    const last = (s.lastSeen||"").replace("T"," ").slice(0,16);
-
-    // average accuracy best-ish: compute from logs per student
-    const l = logs.filter(x=>x.student===n);
-    const answered = l.filter(x=>["A","B","D"].includes(x.mode)).length; // C logs include mistakes; still okay
-    const correct = l.filter(x=>x.correct===true && ["A","B","D","C"].includes(x.mode)).length;
-    const acc = answered? Math.round((correct/answered)*100) : 0;
+    // 估計正確率：只算 A/B/D（C 有過程錯誤log）
+    const l=logs.filter(x=>x.student===n);
+    const abds=l.filter(x=>["A","B","D"].includes(x.mode));
+    const acc=abds.length ? Math.round((abds.filter(x=>x.correct).length/abds.length)*100) : 0;
 
     const tr=document.createElement("tr");
-    tr.innerHTML = `
-      <td style="font-weight:900">${escapeHTML(n)}</td>
+    tr.innerHTML=`
+      <td style="font-weight:950">${esc(n)}</td>
       <td>${passed} / ${TOTAL_LEVELS}</td>
       <td>${acc}%</td>
-      <td>${last || "-"}</td>
-      <td><button class="btn small ghost" data-name="${escapeHTML(n)}">查看</button></td>
+      <td>${last||"-"}</td>
+      <td><button class="btn small ghost">查看</button></td>
     `;
     tr.querySelector("button").onclick=()=>openStudent(n);
-    tbody.appendChild(tr);
+    tb.appendChild(tr);
   });
 
-  document.getElementById("stuDetail").classList.add("hidden");
+  $("stuDetail").classList.add("hidden");
 }
 
 function openStudent(name){
-  const logs = loadLogs().filter(x=>x.student===name).slice(-30).reverse();
-  document.getElementById("stuName").textContent = name;
-  const tb=document.getElementById("logTable");
+  $("stuName").textContent=name;
+  const logs=loadLogs().filter(x=>x.student===name).slice(-30).reverse();
+  const tb=$("logTable");
   tb.innerHTML="";
   logs.forEach(x=>{
-    const ts = (x.ts||"").replace("T"," ").slice(0,19);
-    const q = x.mode==="A" ? "聽選中" : x.mode==="B" ? "看英選中" : x.mode==="C" ? "配對" : "聽拼字";
-    const item = x.mode==="A" ? `(不顯英) → ${x.zh}`
-               : x.mode==="B" ? `${x.en} → ${x.zh}`
-               : x.mode==="D" ? `(聽) → ${x.en} (${x.zh})`
-               : `配對(含 ${x.en}/${x.zh})`;
+    const ts=(x.ts||"").replace("T"," ").slice(0,19);
+    const m = x.mode==="A"?"A 聽選中":x.mode==="B"?"B 看英選中":x.mode==="C"?"C 配對":x.mode==="D"?"D 聽拼字":x.mode;
+    const item =
+      x.mode==="A" ? `(聽) → ${x.zh}` :
+      x.mode==="B" ? `${x.en} → ${x.zh}` :
+      x.mode==="D" ? `(聽) → ${x.en} (${x.zh})` :
+      `配對（含 ${x.en} / ${x.zh}）`;
+    const ok = x.correct ? "對" : "錯";
+    const col = x.correct ? "var(--green)" : "var(--red)";
     tb.innerHTML += `
       <tr>
-        <td>${ts}</td>
-        <td>${x.level}</td>
-        <td>${x.attempt}</td>
-        <td>${q}</td>
-        <td>${escapeHTML(item)}</td>
-        <td style="font-weight:900;color:${x.correct?'var(--green)':'var(--red)'}">${x.correct?"對":"錯"}</td>
+        <td>${esc(ts)}</td><td>${x.level}</td><td>${x.attempt}</td>
+        <td>${esc(m)}</td><td>${esc(item)}</td>
+        <td style="font-weight:950;color:${col}">${ok}</td>
       </tr>
     `;
   });
-  document.getElementById("stuDetail").classList.remove("hidden");
+  $("stuDetail").classList.remove("hidden");
 }
 
-document.getElementById("closeDetailBtn").onclick=()=>document.getElementById("stuDetail").classList.add("hidden");
-
 function exportCSV(){
-  const logs = loadLogs();
-  const header = ["時間","學生","關卡","回合","題序","題型","英文","中文","是否正確","耗時ms","extra"];
-  const rows = logs.map(x=>[
-    x.ts, x.student, x.level, x.attempt, x.qIndex, x.mode, x.en, x.zh, x.correct, x.ms, JSON.stringify(x.extra||{})
-  ]);
-  const csv = [header, ...rows].map(r=>r.map(cell=>{
-    const s = String(cell??"");
+  const logs=loadLogs();
+  const header=["時間","學生","關卡","回合","題序","題型","英文","中文","是否正確","耗時ms","extra"];
+  const rows=logs.map(x=>[x.ts,x.student,x.level,x.attempt,x.qIndex,x.mode,x.en,x.zh,x.correct,x.ms,JSON.stringify(x.extra||{})]);
+  const csv=[header,...rows].map(r=>r.map(cell=>{
+    const s=String(cell??"");
     return `"${s.replace(/"/g,'""')}"`;
   }).join(",")).join("\n");
-
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download=`nmpsg_export_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
+
 function exportJSON(){
-  const payload = {
-    exportedAt: nowISO(),
-    state: loadState(),
-    logs: loadLogs()
-  };
-  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const payload={exportedAt:nowISO(), state:loadState(), logs:loadLogs()};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download=`nmpsg_export_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
+
 function importJSON(file){
-  const reader = new FileReader();
-  reader.onload=()=>{
+  const r=new FileReader();
+  r.onload=()=>{
     try{
-      const payload = JSON.parse(reader.result);
-      if(!payload.state || !payload.logs) throw new Error("格式不對");
-      // merge students
-      const local = loadState();
-      const incoming = payload.state;
-      local.students = local.students || {};
-      incoming.students = incoming.students || {};
+      const payload=JSON.parse(r.result);
+      if(!payload.state||!payload.logs) throw new Error("bad");
+      const local=loadState();
+      const incoming=payload.state;
+
+      local.students=local.students||{};
+      incoming.students=incoming.students||{};
       Object.keys(incoming.students).forEach(n=>{
         if(!local.students[n]) local.students[n]=incoming.students[n];
         else{
-          // merge passed/attempt/best/lastSeen
-          local.students[n].passed = Object.assign({}, local.students[n].passed||{}, incoming.students[n].passed||{});
-          local.students[n].attempts = Object.assign({}, local.students[n].attempts||{}, incoming.students[n].attempts||{});
-          local.students[n].best = Object.assign({}, local.students[n].best||{}, incoming.students[n].best||{});
-          local.students[n].lastSeen = (incoming.students[n].lastSeen>local.students[n].lastSeen) ? incoming.students[n].lastSeen : local.students[n].lastSeen;
+          const L=local.students[n], I=incoming.students[n];
+          L.passed=Object.assign({},L.passed||{},I.passed||{});
+          L.attempts=Object.assign({},L.attempts||{},I.attempts||{});
+          L.best=Object.assign({},L.best||{},I.best||{});
+          L.lastSeen = (I.lastSeen && (!L.lastSeen || I.lastSeen>L.lastSeen)) ? I.lastSeen : L.lastSeen;
+          L.lastLevel = Math.max(L.lastLevel||1, I.lastLevel||1);
         }
       });
       saveState(local);
 
-      // merge logs by simple concat (could dedupe by ts+student+level+attempt+qIndex)
-      const logs = loadLogs();
-      const inLogs = payload.logs || [];
-      const key = (x)=> `${x.ts}|${x.student}|${x.level}|${x.attempt}|${x.qIndex}|${x.mode}|${x.correct}`;
-      const set = new Set(logs.map(key));
-      inLogs.forEach(x=>{
+      // merge logs (simple dedupe)
+      const logs=loadLogs();
+      const key=(x)=>`${x.ts}|${x.student}|${x.level}|${x.attempt}|${x.qIndex}|${x.mode}|${x.correct}`;
+      const set=new Set(logs.map(key));
+      (payload.logs||[]).forEach(x=>{
         const k=key(x);
         if(!set.has(k)){ logs.push(x); set.add(k); }
       });
@@ -1077,71 +937,67 @@ function importJSON(file){
       toast("❌ 匯入失敗：JSON格式不正確");
     }
   };
-  reader.readAsText(file);
+  r.readAsText(file);
 }
 
-/* ===========================
-   10) Header buttons / Tabs
-   =========================== */
-function refreshHeader(){
-  const state = loadState();
-  document.getElementById("who").textContent = state.currentStudent || "未登入";
-}
-document.getElementById("switchBtn").onclick=()=>{
-  show(viewLogin);
-  document.getElementById("nameInput").value = "";
-};
-document.getElementById("teacherBtn").onclick=buildTeacher;
+/* =========================
+   事件綁定
+   ========================= */
+$("switchBtn").onclick=()=>{ show(vLogin); $("nameInput").value=""; };
+$("teacherBtn").onclick=buildTeacher;
 
-document.getElementById("tabMap").onclick=showMap;
-document.getElementById("tabGame").onclick=()=>{
+$("tabMap").onclick=showMap;
+$("tabGame").onclick=()=>{
   const state=loadState();
-  const stu=currentStudent(state);
-  if(!stu){ show(viewLogin); return; }
-  startGame(stu.lastLevel||1, true);
+  const stu=currentStudentObj(state);
+  if(!stu){ show(vLogin); return; }
+  startGame(stu.lastLevel||1);
 };
-document.getElementById("tabTeacher").onclick=buildTeacher;
+$("tabTeacher").onclick=buildTeacher;
 
-document.getElementById("backToMapBtn").onclick=()=>{ stopTimer(); showMap(); };
-document.getElementById("resumeBtn").onclick=()=>{
+$("backToMapBtn").onclick=showMap;
+
+$("resumeBtn").onclick=()=>{
   const state=loadState();
-  const stu=currentStudent(state);
-  if(!stu){ show(viewLogin); return; }
-  startGame(stu.lastLevel||1, true);
+  const stu=currentStudentObj(state);
+  if(!stu){ show(vLogin); return; }
+  startGame(stu.lastLevel||1);
 };
 
-document.getElementById("loginBtn").onclick=()=>{
-  const name = document.getElementById("nameInput").value.trim();
+$("loginBtn").onclick=()=>{
+  const name=$("nameInput").value.trim();
   if(!name){ toast("請輸入名字"); return; }
   const state=loadState();
-  state.currentStudent = name;
-  ensureStudent(state, name);
+  state.currentStudent=name;
+  ensureStudent(state,name);
   saveState(state);
   refreshHeader();
   showMap();
 };
 
-document.getElementById("exportCsvBtn").onclick=exportCSV;
-document.getElementById("exportJsonBtn").onclick=exportJSON;
-document.getElementById("importJsonFile").onchange=(e)=>{
+$("exportCsvBtn").onclick=exportCSV;
+$("exportJsonBtn").onclick=exportJSON;
+$("importJsonFile").onchange=(e)=>{
   const f=e.target.files?.[0];
   if(f) importJSON(f);
   e.target.value="";
 };
 
-document.getElementById("wipeBtn").onclick=()=>{
+$("wipeBtn").onclick=()=>{
   if(confirm("確定清空本機所有學生/紀錄？（不可復原）")){
     localStorage.removeItem(LS_STATE);
     localStorage.removeItem(LS_LOGS);
     toast("已清空");
     refreshHeader();
-    show(viewLogin);
+    show(vLogin);
   }
 };
 
-/* ===========================
-   11) Boot
-   =========================== */
+$("closeDetailBtn").onclick=()=>$("stuDetail").classList.add("hidden");
+
+/* =========================
+   啟動
+   ========================= */
 refreshHeader();
 (function boot(){
   const state=loadState();
@@ -1150,10 +1006,14 @@ refreshHeader();
     saveState(state);
     showMap();
   }else{
-    show(viewLogin);
+    show(vLogin);
+  }
+  // iOS voices preload
+  if(typeof speechSynthesis!=="undefined"){
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
   }
 })();
-
 </script>
 </body>
 </html>
