@@ -5,36 +5,31 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>南門國小拼字挑戰 Go</title>
 <style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC";background:linear-gradient(#e0f2fe,#fff7ed)}
+body{margin:0;font-family:-apple-system,"PingFang TC";background:#f0f9ff}
 header{background:#22c55e;color:#fff;text-align:center;padding:14px;font-size:22px;font-weight:900}
 .hidden{display:none}
-.card{background:#fff;margin:14px auto;max-width:1100px;padding:20px;border-radius:22px;box-shadow:0 12px 30px rgba(0,0,0,.15)}
-button{padding:10px 16px;border:none;border-radius:14px;background:#2563eb;color:#fff;font-weight:900}
-button.ghost{background:#e5e7eb;color:#111}
+.card{background:#fff;margin:14px auto;max-width:1000px;padding:20px;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+button{padding:10px 16px;border:none;border-radius:12px;background:#2563eb;color:#fff;font-weight:900}
 input{padding:10px;font-size:16px;border-radius:10px;border:1px solid #ccc}
-.choice{background:#e0f2fe;padding:14px;border-radius:14px;margin:8px 0;font-size:18px;font-weight:900;cursor:pointer}
-.choice.correct{background:#bbf7d0}
-.choice.wrong{background:#fecaca}
-.big{text-align:center;font-size:28px;font-weight:900;margin:10px}
-.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.match div{padding:14px;border-radius:14px;background:#f1f5f9;font-weight:900;cursor:pointer}
-.match .active{background:#fde68a}
-.match .done{background:#bbf7d0}
-.mapWrap{position:relative;height:520px}
-.node{position:absolute;width:80px;height:80px;border-radius:28px;display:grid;place-items:center;font-weight:900;background:#fde68a;border:4px solid #f59e0b}
-.node.passed{background:#bbf7d0;border-color:#22c55e}
-.node.locked{opacity:.35}
+.choice{background:#e0f2fe;padding:14px;border-radius:12px;margin:8px 0;font-size:18px;font-weight:900;cursor:pointer}
+.choice:hover{background:#bae6fd}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.level{padding:20px;border-radius:16px;background:#fde68a;font-weight:900;text-align:center;cursor:pointer}
+.level.locked{background:#e5e7eb;color:#999;cursor:not-allowed}
+.level.passed{background:#bbf7d0}
 .badges{display:flex;gap:10px;margin-bottom:10px}
-.badge{background:#fef3c7;border-radius:999px;padding:6px 12px;font-weight:900}
-svg{position:absolute;inset:0}
+.badge{background:#fef3c7;padding:6px 12px;border-radius:999px;font-weight:900}
+.big{text-align:center;font-size:26px;font-weight:900}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 </style>
 </head>
 
 <body>
 <header>🏴‍☠️ 南門國小拼字挑戰 Go</header>
 
+<!-- 登入 -->
 <div id="loginScreen" class="card">
-  <h2>👦 學生登入</h2>
+  <h2>學生登入</h2>
   <input id="studentName" placeholder="輸入學生姓名">
   <br><br>
   <label><input type="checkbox" value="A" checked> A 聽力選字</label>
@@ -45,19 +40,23 @@ svg{position:absolute;inset:0}
   <button onclick="login()">開始冒險</button>
 </div>
 
+<!-- 地圖 -->
 <div id="mapScreen" class="card hidden">
-  <h2>🗺️ 寶藏地圖（每關 ≥8/10 才解鎖）</h2>
+  <h2>關卡地圖（8/10 才解鎖）</h2>
   <div class="badges" id="badges"></div>
-  <div class="mapWrap" id="map"></div>
+  <div class="grid" id="map"></div>
 </div>
 
+<!-- 遊戲 -->
 <div id="gameScreen" class="card hidden">
-  <div id="question" class="big"></div>
-  <div>
-    🔊 速度
-    <input type="range" id="rate" min="0.6" max="1.2" step="0.1" value="0.9">
-    <button onclick="playAudio()">播放</button>
+  <div class="topbar">
+    <button onclick="backToMap()">⬅ 回關卡</button>
+    <div>
+      🔊 速度
+      <input type="range" id="rate" min="0.6" max="1.2" step="0.1" value="0.9">
+    </div>
   </div>
+  <div id="question" class="big"></div>
   <div id="choices"></div>
   <button onclick="nextQ()">下一題</button>
 </div>
@@ -108,14 +107,13 @@ const WORDS = [
 ];
 
 /* ===== 邏輯 ===== */
-let student="",level=1,q=0,score=0,streak=0;
-const passed={},badge={pass:false,s5:false,s10:false};
+let level=1,q=0,score=0,streak=0;
+const passed={},badges={pass:false,s5:false,s10:false};
 let types=[],plan=[],current;
 
 function login(){
   const name=studentName.value.replace(/\s/g,"");
   if(!name){alert("請輸入有效姓名");return;}
-  student=name;
   types=[...document.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
   if(!types.length){alert("請選題型");return;}
   loginScreen.classList.add("hidden");
@@ -124,31 +122,29 @@ function login(){
 }
 
 function renderBadges(){
-  badges.innerHTML="";
-  if(badge.pass)badges.innerHTML+=`<div class="badge">🎉 通關</div>`;
-  if(badge.s5)badges.innerHTML+=`<div class="badge">🔥 連勝5</div>`;
-  if(badge.s10)badges.innerHTML+=`<div class="badge">👑 連勝10</div>`;
+  badgesDiv.innerHTML="";
 }
+const badgesDiv=document.getElementById("badges");
 
 function renderMap(){
-  map.innerHTML=`<svg viewBox="0 0 600 520">
-    <path d="M300 40 C450 140 150 260 300 380"
-      stroke="#f59e0b" stroke-width="6" stroke-dasharray="10 14" fill="none"/>
-  </svg>`;
-  const pts=[[300,40],[450,140],[150,260],[300,380]];
-  pts.forEach((p,i)=>{
-    const locked=i>0&&!passed[i];
-    const n=document.createElement("div");
-    n.className="node"+(passed[i+1]?" passed":"")+(locked?" locked":"");
-    n.style.left=(p[0]-40)+"px"; n.style.top=(p[1]-40)+"px";
-    n.textContent=i+1;
-    n.onclick=()=>{ if(locked)alert("需前一關 ≥8 題"); else startLevel(i+1); };
-    map.appendChild(n);
-  });
+  map.innerHTML="";
+  for(let i=1;i<=20;i++){
+    const locked=i>1&&!passed[i-1];
+    const d=document.createElement("div");
+    d.className="level"+(passed[i]?" passed":"")+(locked?" locked":"");
+    d.textContent="第 "+i+" 關";
+    d.onclick=()=>{ if(!locked)startLevel(i); };
+    map.appendChild(d);
+  }
+}
+
+function backToMap(){
+  gameScreen.classList.add("hidden");
+  mapScreen.classList.remove("hidden");
 }
 
 function startLevel(lv){
-  level=lv; q=0; score=0; streak=0;
+  level=lv;q=0;score=0;streak=0;
   plan=Array.from({length:10},()=>types[Math.floor(Math.random()*types.length)]);
   mapScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
@@ -163,22 +159,17 @@ function playAudio(){
 
 function nextQ(){
   if(q>=10){
-    if(score>=8){passed[level]=true; badge.pass=true;}
-    gameScreen.classList.add("hidden");
-    mapScreen.classList.remove("hidden");
-    renderBadges(); renderMap(); return;
+    if(score>=8){passed[level]=true;badges.pass=true;}
+    backToMap(); renderMap(); return;
   }
   const type=plan[q++];
   current=WORDS[Math.floor(Math.random()*WORDS.length)];
   choices.innerHTML="";
-  if(type==="A"){ question.textContent="🔊 聽音選中文"; playAudio(); genChoices(); }
-  if(type==="B"){ question.textContent=current.en; genChoices(); }
-  if(type==="C"){ question.textContent="🧩 中英配對"; genMatch(); }
-  if(type==="D"){
-    question.textContent="🔊 聽音拼英文";
-    playAudio();
-    choices.innerHTML=`<input id="spell"><button onclick="checkSpell()">送出</button>`;
-  }
+  if(type==="A"){question.textContent="聽音選中文";playAudio();genChoices();}
+  if(type==="B"){question.textContent=current.en;genChoices();}
+  if(type==="C"){question.textContent="中英配對";genMatch();}
+  if(type==="D"){question.textContent="聽音拼英文";playAudio();
+    choices.innerHTML=`<input id="spell"><button onclick="checkSpell()">送出</button>`;}
 }
 
 function genChoices(){
@@ -192,11 +183,7 @@ function genChoices(){
     const d=document.createElement("div");
     d.className="choice";
     d.textContent=o;
-    d.onclick=()=>{
-      if(o===current.zh){score++; streak++; if(streak>=5)badge.s5=true; if(streak>=10)badge.s10=true;}
-      else streak=0;
-      nextQ();
-    };
+    d.onclick=()=>{ if(o===current.zh){score++;streak++;} else streak=0; nextQ(); };
     choices.appendChild(d);
   });
 }
@@ -204,7 +191,7 @@ function genChoices(){
 function genMatch(){
   const pick=[current];
   while(pick.length<4){
-    const w=WORDS[Math.floor(Math.random()*WORDS.length)];
+    const w=WORDS[Math.floor(Math.floor(Math.random()*WORDS.length))];
     if(!pick.includes(w))pick.push(w);
   }
   const en=[...pick].sort(()=>Math.random()-.5);
@@ -213,18 +200,18 @@ function genMatch(){
   const box=document.createElement("div"); box.className="match";
   en.forEach(e=>{
     const d=document.createElement("div"); d.textContent=e.en;
-    d.onclick=()=>{sel=e; d.classList.add("active")}; box.appendChild(d);
+    d.onclick=()=>{sel=e;}; box.appendChild(d);
   });
   zh.forEach(z=>{
     const d=document.createElement("div"); d.textContent=z.zh;
-    d.onclick=()=>{ if(sel&&sel.en===z.en){done++; score++; if(done===4)setTimeout(nextQ,400);} };
+    d.onclick=()=>{ if(sel&&sel.en===z.en){done++;score++; if(done===4)setTimeout(nextQ,300);} };
     box.appendChild(d);
   });
   choices.appendChild(box);
 }
 
 function checkSpell(){
-  if(spell.value.trim().toLowerCase()===current.en.toLowerCase()){score++; streak++;}
+  if(spell.value.trim().toLowerCase()===current.en.toLowerCase()){score++;streak++;}
   else streak=0;
   nextQ();
 }
