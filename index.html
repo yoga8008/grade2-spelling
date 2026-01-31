@@ -148,7 +148,7 @@ function speak(w){
 
 /* ===== 登入/地圖 ===== */
 function login(){
-  student=name.value.trim(); if(!student) return alert("請輸入姓名");
+  student = document.getElementById("studentName").value.trim(); if(!student) return alert("請輸入姓名");
   loginDiv(); drawMap();
 }
 function loginDiv(){login.classList.add("hidden"); mapView.classList.remove("hidden");}
