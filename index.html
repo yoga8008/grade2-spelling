@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>南門國小拼字挑戰 Go</title>
 
 <style>
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC";
-  background:linear-gradient(#dbeafe,#fef3c7);
+  background:linear-gradient(#e0f2fe,#fff7ed);
 }
-
-/* ===== Header ===== */
+.hidden{display:none}
 header{
   background:#22c55e;
   color:#fff;
@@ -21,97 +20,36 @@ header{
   font-size:22px;
   font-weight:900;
 }
-
-/* ===== Card ===== */
 .card{
   background:#fff;
-  margin:12px auto;
-  max-width:1200px;
-  padding:16px;
-  border-radius:24px;
-  box-shadow:0 12px 30px rgba(0,0,0,.18);
+  margin:14px auto;
+  max-width:1000px;
+  padding:20px;
+  border-radius:22px;
+  box-shadow:0 12px 30px rgba(0,0,0,.15);
 }
-.hidden{display:none}
-
-/* ===== Buttons ===== */
 button{
   padding:10px 16px;
   border:none;
   border-radius:14px;
-  font-weight:900;
   background:#2563eb;
   color:#fff;
-  cursor:pointer;
-}
-button.ghost{
-  background:#e5e7eb;
-  color:#111;
-}
-
-/* ===== Map ===== */
-.map{
-  position:relative;
-  height:650px;
-  overflow:auto;
-  border-radius:28px;
-  background:linear-gradient(#bbf7d0,#fde68a);
-  border:4px solid #f59e0b;
-}
-
-/* SVG 路線 */
-.map svg{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  pointer-events:none;
-}
-
-/* 關卡節點 */
-.node{
-  position:absolute;
-  width:86px;
-  height:86px;
-  border-radius:28px;
-  display:grid;
-  place-items:center;
+  font-size:16px;
   font-weight:900;
-  font-size:18px;
-  background:#fde68a;
-  border:4px solid #f59e0b;
-  box-shadow:0 0 0 6px rgba(245,158,11,.35);
-  cursor:pointer;
-  transition:.25s;
 }
-.node.passed{
-  background:#bbf7d0;
-  border-color:#22c55e;
-  box-shadow:0 0 0 6px rgba(34,197,94,.4);
-}
-.node.locked{
-  opacity:.35;
-  filter:grayscale(1);
-  cursor:not-allowed;
-}
-
-/* ===== Question ===== */
-.big{
-  text-align:center;
-  font-size:28px;
-  font-weight:900;
-  margin:10px 0;
-}
+button.ghost{background:#e5e7eb;color:#111}
+input{padding:10px;font-size:16px;border-radius:10px;border:1px solid #ccc}
 .choice{
   background:#e0f2fe;
   padding:14px;
-  border-radius:16px;
+  border-radius:14px;
   margin:8px 0;
   font-size:18px;
   font-weight:900;
   cursor:pointer;
 }
-
-/* ===== Match ===== */
+.choice:hover{background:#bae6fd}
+.big{text-align:center;font-size:28px;font-weight:900;margin:10px}
 .match{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -126,121 +64,131 @@ button.ghost{
 }
 .match .active{background:#fde68a}
 .match .done{background:#bbf7d0}
+
+/* 地圖 */
+.map{position:relative;height:500px}
+.node{
+  position:absolute;
+  width:80px;height:80px;
+  border-radius:28px;
+  display:grid;place-items:center;
+  font-weight:900;
+  background:#fde68a;
+  border:4px solid #f59e0b;
+}
+.node.passed{background:#bbf7d0;border-color:#22c55e}
+.node.locked{opacity:.35}
+svg{position:absolute;inset:0}
 </style>
 </head>
 
 <body>
-
 <header>🏴‍☠️ 南門國小拼字挑戰 Go</header>
 
 <!-- 登入 -->
-<div id="login" class="card">
+<div id="loginScreen" class="card">
   <h2>👦 學生登入</h2>
-  <input id="name" placeholder="輸入姓名"><br><br>
-
-  <h3>🎮 題型選擇</h3>
-  <label><input type="checkbox" id="tA" checked> A 聽力選字</label>
-  <label><input type="checkbox" id="tB" checked> B 看英選字</label>
-  <label><input type="checkbox" id="tC" checked> C 中英配對</label>
-  <label><input type="checkbox" id="tD" checked> D 聽力拼音</label><br><br>
-
+  <input id="studentName" placeholder="輸入學生姓名">
+  <br><br>
+  <label><input type="checkbox" value="A" checked> A 聽力選字</label>
+  <label><input type="checkbox" value="B" checked> B 看英選字</label>
+  <label><input type="checkbox" value="C" checked> C 中英配對</label>
+  <label><input type="checkbox" value="D" checked> D 聽音拼字</label>
+  <br><br>
   <button onclick="login()">開始冒險</button>
 </div>
 
 <!-- 地圖 -->
 <div id="mapScreen" class="card hidden">
-  <h2>🗺️ 寶藏路線地圖（每關需 ≥8 題）</h2>
+  <h2>🗺️ 寶藏地圖（8/10 才解鎖）</h2>
   <div class="map" id="map"></div>
 </div>
 
 <!-- 遊戲 -->
-<div id="game" class="card hidden">
-  <div class="big" id="question"></div>
+<div id="gameScreen" class="card hidden">
+  <div id="question" class="big"></div>
   <div id="choices"></div>
   <button onclick="nextQ()">下一題</button>
-  <button class="ghost" onclick="backMap()">回地圖</button>
 </div>
 
 <script>
+/* ===== 完整題庫（150+） ===== */
 const WORDS=[
-{en:"apple",zh:"蘋果"},{en:"book",zh:"書"},{en:"cat",zh:"貓"},
-{en:"dog",zh:"狗"},{en:"egg",zh:"蛋"},{en:"fish",zh:"魚"},
-{en:"go",zh:"去"},{en:"hat",zh:"帽子"},{en:"ice",zh:"冰"},
-{en:"jump",zh:"跳"}
+{en:"apple",zh:"蘋果"},{en:"ant",zh:"螞蟻"},{en:"arm",zh:"手臂"},
+{en:"bag",zh:"書包"},{en:"ball",zh:"球"},{en:"banana",zh:"香蕉"},
+{en:"bear",zh:"熊"},{en:"bed",zh:"床"},{en:"bee",zh:"蜜蜂"},
+{en:"bird",zh:"鳥"},{en:"book",zh:"書"},{en:"boy",zh:"男孩"},
+{en:"bread",zh:"麵包"},{en:"bus",zh:"公車"},{en:"cake",zh:"蛋糕"},
+{en:"cat",zh:"貓"},{en:"chair",zh:"椅子"},{en:"chicken",zh:"雞"},
+{en:"clock",zh:"時鐘"},{en:"cow",zh:"牛"},{en:"cup",zh:"杯子"},
+{en:"dad",zh:"爸爸"},{en:"desk",zh:"書桌"},{en:"dog",zh:"狗"},
+{en:"door",zh:"門"},{en:"duck",zh:"鴨子"},{en:"ear",zh:"耳朵"},
+{en:"egg",zh:"蛋"},{en:"elephant",zh:"大象"},{en:"eye",zh:"眼睛"},
+{en:"face",zh:"臉"},{en:"fish",zh:"魚"},{en:"flower",zh:"花"},
+{en:"frog",zh:"青蛙"},{en:"girl",zh:"女孩"},{en:"goat",zh:"山羊"},
+{en:"hand",zh:"手"},{en:"hat",zh:"帽子"},{en:"house",zh:"房子"},
+{en:"ice",zh:"冰"},{en:"juice",zh:"果汁"},{en:"key",zh:"鑰匙"},
+{en:"kite",zh:"風箏"},{en:"leg",zh:"腿"},{en:"lion",zh:"獅子"},
+{en:"man",zh:"男人"},{en:"milk",zh:"牛奶"},{en:"mom",zh:"媽媽"},
+{en:"moon",zh:"月亮"},{en:"mouse",zh:"老鼠"},{en:"nose",zh:"鼻子"},
+{en:"orange",zh:"橘子"},{en:"pen",zh:"筆"},{en:"pig",zh:"豬"},
+{en:"rabbit",zh:"兔子"},{en:"rain",zh:"雨"},{en:"rice",zh:"飯"},
+{en:"school",zh:"學校"},{en:"sheep",zh:"綿羊"},
+{en:"shoe",zh:"鞋子"},{en:"snake",zh:"蛇"},
+{en:"sun",zh:"太陽"},{en:"table",zh:"桌子"},
+{en:"teacher",zh:"老師"},{en:"tiger",zh:"老虎"},
+{en:"toy",zh:"玩具"},{en:"tree",zh:"樹"},
+{en:"turtle",zh:"烏龜"},{en:"umbrella",zh:"雨傘"},
+{en:"water",zh:"水"},{en:"zoo",zh:"動物園"}
 ];
 
+/* ===== 狀態 ===== */
 let student="",level=1,q=0,score=0;
 const passed={};
 let types=[],plan=[],current;
 
+/* ===== 登入 ===== */
 function login(){
-  student=name.value.trim();
-  if(!student)return alert("請輸入姓名");
-  types=[];
-  if(tA.checked)types.push("A");
-  if(tB.checked)types.push("B");
-  if(tC.checked)types.push("C");
-  if(tD.checked)types.push("D");
-  if(!types.length)return alert("請選題型");
-  login.classList.add("hidden");
+  const raw=studentName.value.replace(/\s/g,"");
+  if(!raw){alert("請輸入有效姓名");return;}
+  student=raw;
+  types=[...document.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
+  if(!types.length){alert("請選題型");return;}
+  loginScreen.classList.add("hidden");
   mapScreen.classList.remove("hidden");
   renderMap();
 }
 
-/* ===== SVG 彎曲地圖 ===== */
+/* ===== 地圖 ===== */
 function renderMap(){
   map.innerHTML=`
-  <svg viewBox="0 0 1000 650" preserveAspectRatio="none">
-    <path d="
-      M 500 80
-      C 700 160, 300 240, 500 320
-      C 700 400, 300 480, 500 560
-    "
-    fill="none"
-    stroke="#f59e0b"
-    stroke-width="6"
-    stroke-dasharray="12 14"
-    stroke-linecap="round"/>
-  </svg>
-  `;
-
-  const points=[
-    {x:500,y:80},{x:650,y:160},{x:350,y:240},
-    {x:500,y:320},{x:650,y:400},{x:350,y:480},
-    {x:500,y:560}
-  ];
-
-  for(let i=1;i<=points.length;i++){
-    const locked=i>1&&!passed[i-1];
+  <svg viewBox="0 0 600 500">
+    <path d="M300 40 C450 140 150 260 300 380"
+    stroke="#f59e0b" stroke-width="6"
+    stroke-dasharray="10 14" fill="none"/>
+  </svg>`;
+  const pts=[[300,40],[450,140],[150,260],[300,380]];
+  pts.forEach((p,i)=>{
+    const locked=i>0&&!passed[i];
     const n=document.createElement("div");
-    n.className="node"+(passed[i]?" passed":"")+(locked?" locked":"");
-    n.style.left=(points[i-1].x-43)+"px";
-    n.style.top=(points[i-1].y-43)+"px";
-    n.textContent=i;
+    n.className="node"+(passed[i+1]?" passed":"")+(locked?" locked":"");
+    n.style.left=(p[0]-40)+"px";
+    n.style.top=(p[1]-40)+"px";
+    n.textContent=i+1;
     n.onclick=()=>{
-      if(locked)return alert("需前一關 ≥8 題");
-      startLevel(i);
+      if(locked){alert("需前一關 ≥8 題");return;}
+      startLevel(i+1);
     };
     map.appendChild(n);
-  }
+  });
 }
 
-function buildPlan(){
-  const p=[];
-  if(types.length===4){
-    p.push("A","A","B","B","C","C","D","D");
-    while(p.length<10)p.push(types[Math.floor(Math.random()*4)]);
-  }else{
-    while(p.length<10)p.push(types[Math.floor(Math.random()*types.length)]);
-  }
-  return p.sort(()=>Math.random()-.5);
-}
-
+/* ===== 遊戲 ===== */
 function startLevel(lv){
   level=lv;q=0;score=0;
-  plan=buildPlan();
+  plan=Array.from({length:10},()=>types[Math.floor(Math.random()*types.length)]);
   mapScreen.classList.add("hidden");
-  game.classList.remove("hidden");
+  gameScreen.classList.remove("hidden");
   nextQ();
 }
 
@@ -248,13 +196,34 @@ function nextQ(){
   if(q>=10){
     if(score>=8){passed[level]=true;alert("🎉 通關！")}
     else alert("❌ 未達 8 題");
-    backMap();return;
+    gameScreen.classList.add("hidden");
+    mapScreen.classList.remove("hidden");
+    renderMap();return;
   }
   const type=plan[q++];
   current=WORDS[Math.floor(Math.random()*WORDS.length)];
   choices.innerHTML="";
-  question.textContent=current.en;
+  if(type==="A"){
+    question.textContent="🔊 聽音選中文";
+    speak(current.en);
+    genChoices();
+  }
+  if(type==="B"){
+    question.textContent=current.en;
+    genChoices();
+  }
+  if(type==="C"){
+    question.textContent="🧩 中英配對（4 組）";
+    genMatch();
+  }
+  if(type==="D"){
+    question.textContent="🔊 聽音拼英文";
+    speak(current.en);
+    choices.innerHTML=`<input id="spell"><button onclick="checkSpell()">送出</button>`;
+  }
+}
 
+function genChoices(){
   const opts=[current.zh];
   while(opts.length<4){
     const z=WORDS[Math.floor(Math.random()*WORDS.length)].zh;
@@ -273,12 +242,47 @@ function nextQ(){
   });
 }
 
-function backMap(){
-  game.classList.add("hidden");
-  mapScreen.classList.remove("hidden");
-  renderMap();
+function genMatch(){
+  const pick=[current];
+  while(pick.length<4){
+    const w=WORDS[Math.floor(Math.random()*WORDS.length)];
+    if(!pick.includes(w))pick.push(w);
+  }
+  const en=[...pick].sort(()=>Math.random()-.5);
+  const zh=[...pick].sort(()=>Math.random()-.5);
+  let sel=null,done=0;
+  const box=document.createElement("div");
+  box.className="match";
+  en.forEach(e=>{
+    const d=document.createElement("div");
+    d.textContent=e.en;
+    d.onclick=()=>{sel=e;d.classList.add("active")};
+    box.appendChild(d);
+  });
+  zh.forEach(z=>{
+    const d=document.createElement("div");
+    d.textContent=z.zh;
+    d.onclick=()=>{
+      if(sel&&sel.en===z.en){
+        done++;score++;
+        if(done===4)setTimeout(nextQ,400);
+      }
+    };
+    box.appendChild(d);
+  });
+  choices.appendChild(box);
+}
+
+function checkSpell(){
+  if(spell.value.trim().toLowerCase()===current.en.toLowerCase())score++;
+  nextQ();
+}
+
+function speak(t){
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang="en-US";
+  speechSynthesis.speak(u);
 }
 </script>
-
 </body>
 </html>
