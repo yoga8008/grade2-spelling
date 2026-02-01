@@ -904,6 +904,7 @@ const typeSummaryEl = el("typeSummary");
 const badgeBox = el("badgeBox");
 const mapInner = el("mapInner");
 const continentHint = el("continentHint");
+const mistakeBox = el("mistakeBox");
 
 const gameBack = el("gameBack");
 const gameTitle = el("gameTitle");
@@ -1195,6 +1196,7 @@ function login(name){
   if(!name){
     alert("⚠️ 姓名不可空白");
     return;
+    renderMistakeCard();
   }
 
   ALL = loadAll();
@@ -1629,6 +1631,7 @@ function answerTyping(value){
 
 function applyScore(gain, msg){
   const before = game.streak;
+
   if(gain===1){
     game.score += 1;
     game.streak += 1;
@@ -1640,21 +1643,17 @@ function applyScore(gain, msg){
   }else{
     game.streak = 0;
     setFeedback("bad", msg);
-  }
-  // ⭐⭐⭐ 記錄錯誤單字（加這裡）
-  if(!currentStudent.mistakes){
-    currentStudent.mistakes = {};
-  }
 
-  const q = game.questions[game.qIndex];
-  if(q.word){
-    const w = q.word.en;
-    currentStudent.mistakes[w] = (currentStudent.mistakes[w] || 0) + 1;
-    saveAll(ALL);
+    // ✅ 只在答錯時記錄（A/B/D 才有 q.word）
+    const q = game.questions[game.qIndex];
+    if(q.word){
+      currentStudent.mistakes = currentStudent.mistakes || {};
+      const w = q.word.en;
+      currentStudent.mistakes[w] = (currentStudent.mistakes[w] || 0) + 1;
+      saveAll(ALL);
+      renderMistakeCard();
+    }
   }
-
-  renderMistakeCard(); // 即時更新卡片
-}
 
   game.history[game.qIndex] = { gain, streakBefore: before };
   updateTop();
@@ -1680,6 +1679,7 @@ function nextQuestion(){
     renderQuestion();
   }else{
     finishLevel();
+    renderMistakeCard();
   }
 }
 
@@ -1798,7 +1798,29 @@ function finishLevel(){
 
   refreshHomeStats();
   renderMap();
+  renderMistakeCard();  
 
+  function renderMistakeCard(){
+  if(!mistakeBox) return;
+
+  const m = currentStudent?.mistakes || {};
+  const arr = Object.entries(m)
+    .sort((a,b)=> b[1]-a[1])
+    .slice(0,12);
+
+  if(arr.length===0){
+    mistakeBox.innerHTML = `<div class="small" style="color:#64748b">尚無錯誤紀錄 🎉</div>`;
+    return;
+  }
+
+  mistakeBox.innerHTML = arr.map(([w,c])=>`
+    <div class="mistakeCard">
+      <b>${w}</b>
+      <small>錯誤 ${c} 次</small>
+    </div>
+  `).join("");
+}
+  
   document.getElementById("btnGoMap2").onclick=closeGame;
   document.getElementById("btnReplayLevel").onclick=()=>startLevel(game.level);
 
