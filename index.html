@@ -1436,25 +1436,11 @@ if(q.type==="D"){
   // 原本事件維持不變
   const inp = box.querySelector("#typeAns");
   inp.focus();
-  box.querySelector("#btnCheck").onclick = () => {
-  const val = inp.value.trim();   // 去除空白
-
-  if (!val) {
-    alert("請先輸入英文拼字 ✏️");
-    inp.focus();
-    return;
-  }
-
-  answerTyping(val);
-};
-
-inp.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    box.querySelector("#btnCheck").click();
-  }
-});
-
+  box.querySelector("#btnCheck").onclick = ()=>answerTyping(inp.value);
+  inp.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter") box.querySelector("#btnCheck").click();
+  });
+}
 
   if(q.type==="C"){
     const box = document.createElement("div");
