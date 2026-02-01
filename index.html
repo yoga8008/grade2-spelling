@@ -1044,6 +1044,28 @@ function renderBadges(){
 /* ==============================
    Map helpers (unlock/pass/best)
 ================================ */
+
+function renderMistakeCard(){
+  if(!mistakeBox || !currentStudent) return;
+
+  const m = currentStudent.mistakes || {};
+  const arr = Object.entries(m)
+    .sort((a,b)=> b[1]-a[1])
+    .slice(0,12);
+
+  if(arr.length===0){
+    mistakeBox.innerHTML = `<div class="small" style="color:#64748b">尚無錯誤紀錄 🎉</div>`;
+    return;
+  }
+
+  mistakeBox.innerHTML = arr.map(([w,c])=>`
+    <div class="mistakeCard">
+      <b>${w}</b>
+      <small>錯誤 ${c} 次</small>
+    </div>
+  `).join("");
+}
+
 const LEVEL_COUNT = 100;
 const Q_PER_LEVEL = 10;
 const PASS_SCORE = 8;
@@ -1800,27 +1822,6 @@ function finishLevel(){
   renderMap();
   renderMistakeCard();  
 
-  function renderMistakeCard(){
-  if(!mistakeBox) return;
-
-  const m = currentStudent?.mistakes || {};
-  const arr = Object.entries(m)
-    .sort((a,b)=> b[1]-a[1])
-    .slice(0,12);
-
-  if(arr.length===0){
-    mistakeBox.innerHTML = `<div class="small" style="color:#64748b">尚無錯誤紀錄 🎉</div>`;
-    return;
-  }
-
-  mistakeBox.innerHTML = arr.map(([w,c])=>`
-    <div class="mistakeCard">
-      <b>${w}</b>
-      <small>錯誤 ${c} 次</small>
-    </div>
-  `).join("");
-}
-  
   document.getElementById("btnGoMap2").onclick=closeGame;
   document.getElementById("btnReplayLevel").onclick=()=>startLevel(game.level);
 
