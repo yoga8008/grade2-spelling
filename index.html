@@ -1433,14 +1433,30 @@ if(q.type==="D"){
   // ⬆️ 提示放在輸入框上方
   box.prepend(hint);
 
-  // 原本事件維持不變
-  const inp = box.querySelector("#typeAns");
-  inp.focus();
-  box.querySelector("#btnCheck").onclick = ()=>answerTyping(inp.value);
-  inp.addEventListener("keydown",(e)=>{
-    if(e.key==="Enter") box.querySelector("#btnCheck").click();
-  });
-}
+const inp = box.querySelector("#typeAns");
+const btn = box.querySelector("#btnCheck");
+
+inp.focus();
+
+// 一開始不能送
+btn.disabled = true;
+
+// 有輸入才可以送
+inp.addEventListener("input", () => {
+  btn.disabled = inp.value.trim() === "";
+});
+
+// 點確認
+btn.onclick = () => {
+  answerTyping(inp.value.trim());
+};
+
+// Enter = 點確認
+inp.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !btn.disabled) {
+    btn.click();
+  }
+});
 
   if(q.type==="C"){
     const box = document.createElement("div");
