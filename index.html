@@ -501,14 +501,12 @@
 
       <div class="divider"></div>
 
-      <h2>⚙️ 題型設定（會影響每關題目）</h2>
+      <h2>⚙️ 題型設定</h2>
       <div class="row">
         <span class="pill">目前題型：<b id="typeSummary">全選 A/B/C/D</b></span>
-        <span class="pill">配對題：每題 4 組</span>
       </div>
       <div class="help">
         若選「全選」，每關 10 題會混合 A/B/C/D（平均分配，並隨機排序）。<br/>
-        若只勾選部分題型，每關 10 題只會從你勾選的題型出題。
       </div>
 
       <div class="divider"></div>
@@ -947,7 +945,7 @@ el("btnSaveType").onclick=()=>{
    Home badges
 ================================ */
 const BADGE_DEFS = [
-  {id:"firstClear", icon:"🏁", color:"green", name:"首次通關", desc:"任一關第一次過關"},
+  {id:"firstClear", icon:"🏁", color:"green", name:"首次通關", desc:"第一次過關"},
   {id:"streak5", icon:"🔥5", color:"gold", name:"連勝 5 題", desc:"同一關連續答對 5 題"},
   {id:"streak10", icon:"🔥10", color:"purple", name:"連勝 10 題", desc:"同一關連續答對 10 題"},
   {id:"perfect10", icon:"💯", color:"blue", name:"單關滿分", desc:"任一關 10/10"},
