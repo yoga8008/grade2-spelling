@@ -1166,7 +1166,10 @@ function login(name){
   // ⭐ 關鍵這一行
   el("studentName").value = "";
 }
-
+  // ⭐ 登入成功提示
+  popToast(`歡迎 ${name} 👋`);
+}
+  
 el("btnLogin").onclick=()=>login(el("studentName").value);
 el("studentName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") login(el("studentName").value); });
 
