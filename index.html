@@ -1381,24 +1381,68 @@ function renderQuestion(){
     });
   }
 
-  if(q.type==="D"){
-    const box = document.createElement("div");
-    box.className="center";
-    box.innerHTML = `
-      <div class="hintBox">按「播放」聽單字，輸入你聽到的英文拼字。</div>
-      <div class="typeWrap">
-        <input class="typeInput" id="typeAns" placeholder="請輸入英文拼字" autocomplete="off" autocapitalize="none" />
-      </div>
-      <div class="row" style="justify-content:center; margin-top:12px">
-        <button class="btn primary" id="btnCheck">✅ 送出</button>
+if(q.type==="D"){
+  const box = document.createElement("div");
+  box.className="center";
+  box.innerHTML = `
+    <div class="typeWrap">
+      <input class="typeInput" id="typeAns"
+        placeholder="請輸入英文拼字"
+        autocomplete="off"
+        autocapitalize="none" />
+    </div>
+    <div class="row" style="justify-content:center; margin-top:12px">
+      <button class="btn primary" id="btnCheck">✅ 送出</button>
+    </div>
+  `;
+  questionArea.appendChild(box);
+
+  /* ✅ 新增：前 30 關拼字框框提示 */
+  const isEarlyLevel = game.level <= 30;
+  const hint = document.createElement("div");
+  hint.className = "hintBox";
+
+  if(isEarlyLevel){
+    const letters = q.word.en.split("");
+    const len = letters.length;
+
+    // 短字露 1 個，長字露 2 個
+    const revealCount = len <= 4 ? 1 : 2;
+
+    // 隨機挑位置（不限首字）
+    const idxs = [];
+    while(idxs.length < revealCount){
+      const r = Math.floor(Math.random() * len);
+      if(!idxs.includes(r)) idxs.push(r);
+    }
+
+    // 產生 _ _ p l _ 這種框框
+    const masked = letters
+      .map((ch,i)=> idxs.includes(i) ? ch : "_")
+      .join(" ");
+
+    hint.innerHTML = `
+      🔔 拼字小提醒（新手關卡）<br>
+      ・這個單字有 <b>${len}</b> 個字母<br>
+      <div style="margin-top:6px;font-size:22px;letter-spacing:4px">
+        ${masked}
       </div>
     `;
-    questionArea.appendChild(box);
-    const inp = box.querySelector("#typeAns");
-    inp.focus();
-    box.querySelector("#btnCheck").onclick=()=>answerTyping(inp.value);
-    inp.addEventListener("keydown",(e)=>{ if(e.key==="Enter") box.querySelector("#btnCheck").click(); });
+  }else{
+    hint.textContent = "請聽發音，拼出正確英文單字。";
   }
+
+  // ⬆️ 提示放在輸入框上方
+  box.prepend(hint);
+
+  // 原本事件維持不變
+  const inp = box.querySelector("#typeAns");
+  inp.focus();
+  box.querySelector("#btnCheck").onclick = ()=>answerTyping(inp.value);
+  inp.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter") box.querySelector("#btnCheck").click();
+  });
+}
 
   if(q.type==="C"){
     const box = document.createElement("div");
