@@ -1385,7 +1385,7 @@ function renderQuestion(){
     const box = document.createElement("div");
     box.className="center";
     box.innerHTML = `
-      <div class="hintBox">按「播放」聽單字，輸入你聽到的英文拼字（不顯示英文）。</div>
+      <div class="hintBox">按「播放」聽單字，輸入你聽到的英文拼字。</div>
       <div class="typeWrap">
         <input class="typeInput" id="typeAns" placeholder="請輸入英文拼字" autocomplete="off" autocapitalize="none" />
       </div>
@@ -1404,7 +1404,7 @@ function renderQuestion(){
     const box = document.createElement("div");
     box.className="center";
     box.innerHTML = `
-      <div class="hintBox">先點「英文」再點「中文」。點錯會提示正解，但這一題記 0 分（仍可完成配對）。</div>
+      <div class="hintBox">先點「英文」再點「中文」。點錯會提示正解，但這一題記 0 分。</div>
       <div class="match-grid" id="mg">
         <div class="match-col" id="ml"></div>
         <div class="match-col" id="mr"></div>
