@@ -1606,6 +1606,20 @@ function applyScore(gain, msg){
     game.streak = 0;
     setFeedback("bad", msg);
   }
+  // ⭐⭐⭐ 記錄錯誤單字（加這裡）
+  if(!currentStudent.mistakes){
+    currentStudent.mistakes = {};
+  }
+
+  const q = game.questions[game.qIndex];
+  if(q.word){
+    const w = q.word.en;
+    currentStudent.mistakes[w] = (currentStudent.mistakes[w] || 0) + 1;
+    saveAll(ALL);
+  }
+
+  renderMistakeCard(); // 即時更新卡片
+}
 
   game.history[game.qIndex] = { gain, streakBefore: before };
   updateTop();
