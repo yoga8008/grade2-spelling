@@ -1390,7 +1390,7 @@ if(q.type==="D"){
         autocapitalize="none" />
     </div>
     <div class="row" style="justify-content:center; margin-top:12px">
-      <button class="btn primary" id="btnCheck">✅ 送出</button>
+      <button class="btn primary" id="btnCheck">✅ 確認</button>
     </div>
   `;
   questionArea.appendChild(box);
@@ -1578,7 +1578,7 @@ function nextQuestion(){
   }
   if(q.type==="D"){
     const inp = questionArea.querySelector(".typeInput");
-    if(inp && !inp.disabled){ alert("請先輸入並送出答案。"); return; }
+    if(inp && !inp.disabled){ alert("請先輸入並確認答案。"); return; }
   }
   if(q.type==="C" && (q.donePairs||0) < 4){
     alert("請先完成 4 組配對。"); return;
