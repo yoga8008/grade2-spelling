@@ -1777,34 +1777,6 @@ function finishLevel(){
   }
 })();
 
-/* ⭐⭐ 就貼在這裡 ⭐⭐ */
-document.getElementById("btnLogin").addEventListener("click", () => {
-  const name = document.getElementById("studentName").value;
-  login(name);
-});
-
-  if("speechSynthesis" in window){
-    window.speechSynthesis.onvoiceschanged = ()=>{};
-  }
-
-  renderBadges();
-  renderMap();
-
-  // auto login last played student if exists
-  const all = loadAll();
-  const names = all.students ? Object.keys(all.students) : [];
-  if(names.length){
-    let best = names[0], bestTs=0;
-    names.forEach(n=>{
-      const s = all.students[n];
-      const ts = s.lastPlayed || 0;
-      if(ts>bestTs){ bestTs=ts; best=n; }
-    });
-    login(best);
-  }else{
-    refreshHomeStats();
-  }
-})();
 </script>
 </body>
 </html>
