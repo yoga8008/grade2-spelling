@@ -1080,7 +1080,7 @@ function renderMap(){
       if(!unlocked) btn.classList.add("locked");
 
       const star = passed ? "⭐" : (unlocked ? "🎯" : "🔒");
-      const mini = passed ? `已通關｜最高 ${best ?? 0}/10` : (unlocked ? "可挑戰｜需 ≥8/10" : "未解鎖｜先過上一關");
+      const mini = passed ? `已通關｜最高 ${best ?? 0}/10` : (unlocked ? "可挑戰" : "未解鎖");
       const city = levelCity(lvl);
 
       btn.innerHTML = `
