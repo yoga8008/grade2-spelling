@@ -1267,7 +1267,6 @@ el("btnPlay").onclick=()=>{
   else if(q.type==="B") speakWord(q.word.en);
   else if(q.type==="C") speakWord(q.pairs[0].en);
 };
-el("btnReplay").onclick=()=>el("btnPlay").click();
 
 function setFeedback(kind, html){ feedback.innerHTML = `<div class="msg ${kind}">${html}</div>`; }
 function clearFeedback(){ feedback.innerHTML=""; }
