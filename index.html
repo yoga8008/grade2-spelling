@@ -22,6 +22,7 @@
     --shadow2: 0 8px 22px rgba(2,6,23,.10);
     --radius: 18px;
   }
+  
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
@@ -1402,6 +1403,30 @@ if(q.type==="D"){
     </div>
   `;
   questionArea.appendChild(box);
+const inp = box.querySelector("#typeAns");
+const btn = box.querySelector("#btnCheck");
+
+inp.focus();
+
+// 一開始不能送
+btn.disabled = true;
+
+// 有輸入才可以送
+inp.addEventListener("input", () => {
+  btn.disabled = inp.value.trim() === "";
+});
+
+// 點送出
+btn.onclick = () => {
+  answerTyping(inp.value.trim());
+};
+
+// Enter = 點送出
+inp.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !btn.disabled) {
+    btn.click();
+  }
+});
 
   /* ✅ 新增：前 30 關拼字框框提示 */
   const isEarlyLevel = game.level <= 30;
@@ -1440,33 +1465,7 @@ if(q.type==="D"){
 
   // ⬆️ 提示放在輸入框上方
   box.prepend(hint);
-
-const inp = box.querySelector("#typeAns");
-const btn = box.querySelector("#btnCheck");
-
-inp.focus();
-
-// 一開始不能送
-btn.disabled = true;
-
-// 有輸入才可以送
-inp.addEventListener("input", () => {
-  btn.disabled = inp.value.trim() === "";
-});
-
-// 點確認
-btn.onclick = () => {
-  answerTyping(inp.value.trim());
-};
-
-// Enter = 點確認
-inp.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !btn.disabled) {
-    btn.click();
-  }
-});
-}
-  
+ 
   if(q.type==="C"){
     const box = document.createElement("div");
     box.className="center";
