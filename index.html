@@ -615,10 +615,10 @@
       </div>
       <div class="typePick">
         <div class="chip all" id="chipAll">✅ 全選 A/B/C/D</div>
-        <div class="chip" id="chipA">A：聽力選字（聽→選中文｜不顯示英文）</div>
+        <div class="chip" id="chipA">A：聽力選字（聽→選中文）</div>
         <div class="chip" id="chipB">B：看英選字（看英文→選中文）</div>
         <div class="chip" id="chipC">C：中英配對（每題 4 組）</div>
-        <div class="chip" id="chipD">D：聽力拼音（聽→拼英文｜不顯示英文）</div>
+        <div class="chip" id="chipD">D：聽力拼音（聽→拼英文）</div>
       </div>
       <div class="help" style="margin-top:10px">
         至少要選 1 種題型。配對題（C）固定 4 組，點錯會直接提示正解。
@@ -1333,10 +1333,10 @@ function renderQuestion(){
 
   modeTagEl.textContent = q.type;
   const modeTitle = {
-    A:"A 聽力選字（聽→選中文｜不顯示英文）",
+    A:"A 聽力選字（聽→選中文）",
     B:"B 看英選字（看英文→選中文）",
     C:"C 中英配對（4 組）",
-    D:"D 聽力拼音（聽→拼英文｜不顯示英文）"
+    D:"D 聽力拼音（聽→拼英文）"
   }[q.type];
 
   qTitleEl.textContent = modeTitle;
