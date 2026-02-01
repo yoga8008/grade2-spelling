@@ -1143,13 +1143,21 @@ function refreshHomeStats(){
 
 function login(name){
   name = sanitizeName(name);
-  if(!name){ alert("⚠️ 姓名不可空白"); return; }
+  if(!name){
+    alert("⚠️ 姓名不可空白");
+    return;
+  }
+
   ALL = loadAll();
   currentStudent = ensureStudent(ALL, name);
   currentName = name;
   saveAll(ALL);
+
   refreshHomeStats();
   renderMap();
+
+  // ⭐ 關鍵這一行
+  el("studentName").value = "";
 }
 
 el("btnLogin").onclick=()=>login(el("studentName").value);
