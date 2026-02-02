@@ -537,7 +537,7 @@
 <div class="wrap">
   <div class="grid">
     <!-- left -->
-    <div class="card panel">
+    <div class="card panel" style="display:none">
       <h2>👤 使用者</h2>
       <div class="row" style="justify-content:space-between">
         <div class="pill">目前：<span id="curStudent">（尚未登入）</span></div>
@@ -1927,9 +1927,27 @@ function finishLevel(){
       <div class="overlayHandle"></div>
 
       <div id="overlay-profile" class="overlayView">
-        <h2>👤 個人資訊</h2>
-        <div class="overlayContent"></div>
-      </div>
+  <h2>👤 個人資訊</h2>
+
+  <div class="row" style="justify-content:space-between">
+    <div class="pill">目前：<span id="curStudent">（尚未登入）</span></div>
+    <div class="pill">已通關：<span id="curCleared">0</span>/100</div>
+  </div>
+
+  <div style="margin-top:10px">
+    <div class="label">輸入姓名（不可空白）</div>
+    <div class="row" style="margin-top:6px">
+      <input class="input" id="studentName" />
+      <button class="btn primary" id="btnLogin">登入</button>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div class="k"><b id="kLevel">—</b><small>當前關卡</small></div>
+    <div class="k"><b id="kNeed">8/10</b><small>過關門檻</small></div>
+    <div class="k"><b id="kBest">—</b><small>本關最高分</small></div>
+  </div>
+</div>
 
       <div id="overlay-map" class="overlayView">
         <h2>🌍 世界地圖</h2>
