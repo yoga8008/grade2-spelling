@@ -563,10 +563,11 @@
 
       <div class="divider"></div>
 
-      <h2>▶️ 開始</h2>
-      <div class="row">
-        <button class="btn primary" id="btnStartNext">🚀 開始挑戰</button>
-        <button class="btn ghost" id="btnGoMap">🗺️ 回到世界地圖</button>
+      <h2>▶️ 選單</h2>
+      <div class="row" style="flex-wrap:nowrap; gap:10px">
+        <button class="btn primary" id="btnStartNext">🚀 關卡模式</button>
+        <button class="btn ghost" id="btnQuickPractice" style="display:none">🧠 複習模式</button>
+        <button class="btn ghost" id="btnGoMap">🗺️ 世界地圖</button>
       </div>
       <div class="kpi">
         <div class="k"><b id="kLevel">—</b><small>當前關卡</small></div>
@@ -903,7 +904,8 @@ function ensureStudent(all, name){
       cleared: {},  // level -> {bestScore, passed, attempts, firstClearTs}
       badges: {},
       totalPassed:0,
-      lastPlayed:null
+      lastPlayed:null,
+      wordStats:{},
     };
   }
   if(!all.settings) all.settings = {};
@@ -1235,6 +1237,24 @@ function refreshHomeStats(){
   continentHint.textContent = lines.join(" ｜ ");
 
   renderBadges();
+  updateQuickPracticeBtn();
+}
+  
+  function updateQuickPracticeBtn(){
+  const btn = el("btnQuickPractice");
+  if(!btn || !currentStudent) return;
+
+  const stats = currentStudent.wordStats || {};
+  const count = Object.values(stats)
+    .filter(st => (st.wrong||0) > 0 && (st.correctStreak||0) < 3)
+    .length;
+
+  if(count === 0){
+    btn.style.display = "none";
+  }else{
+    btn.style.display = "inline-flex";
+    btn.textContent = `🧠 複習模式（${count} 字）`;
+  }
 }
 
 function login(name){
@@ -1246,7 +1266,6 @@ function login(name){
   if(!name){
     alert("⚠️ 姓名不可空白");
     return;
-    renderMistakeCard();
   }
 
   ALL = loadAll();
@@ -1287,11 +1306,59 @@ el("btnStartNext").onclick=()=>{
   startLevel(next);
 };
 
+  // ⭐ 複習模式按鈕（貼這行）
+el("btnQuickPractice").onclick = startMistakePractice;
+  
 /* ==============================
    Game engine
 ================================ */
 let game = null;
 let tick=null, t0=0;
+function startMistakePractice(){
+  if(!currentStudent){
+    alert("請先登入");
+    return;
+  }
+
+  const stats = currentStudent.wordStats || {};
+  const mistakeWords = Object.entries(stats)
+    .filter(([w,st]) => (st.wrong||0) > 0 && (st.correctStreak||0) < 3)
+    .sort((a,b)=> (b[1].wrong||0)-(a[1].wrong||0))
+    .slice(0,10)
+    .map(([w])=> WORDS.find(x=>x.en===w))
+    .filter(Boolean);
+
+  if(mistakeWords.length===0){
+    alert("🎉 沒有需要複習的單字！");
+    return;
+  }
+
+  game = {
+    level: "mistake",
+    qIndex: 0,
+    score: 0,
+    streak: 0,
+    streakBest: 0,
+    startedAt: Date.now(),
+    questions: mistakeWords.map(w=>({
+      type: "D",
+      word: w,
+      answered:false
+    })),
+    history:[]
+  };
+
+  gameTitle.textContent = "🧠 複習模式";
+  openGame();
+  updateRateUI();
+  startTimer();
+  renderQuestion();
+
+  // ⭐ 一定要在 function 裡
+  modeTagEl.textContent = "複習";
+  el("btnBackToMap").style.display = "none";
+  el("btnPrev").style.display = "none";
+}
 
 function stopTimer(){ if(tick){ clearInterval(tick); tick=null; } }
 function fmt(ms){
@@ -1306,11 +1373,17 @@ function startTimer(){
   tick=setInterval(()=>{ timeEl.textContent = fmt(Date.now()-t0); }, 200);
 }
 function openGame(){ gameBack.style.display="flex"; }
-function closeGame(){ gameBack.style.display="none"; stopTimer(); }
-el("btnCloseGame").onclick=closeGame;
-gameBack.addEventListener("click",(e)=>{ if(e.target===gameBack) closeGame(); });
-el("btnBackToMap").onclick=closeGame;
+function closeGame(){
+  gameBack.style.display="none";
+  stopTimer();
 
+  el("btnBackToMap").style.display = "";
+  el("btnPrev").style.display = "";
+}
+el("btnCloseGame").onclick = closeGame;
+gameBack.addEventListener("click",(e)=>{ if(e.target===gameBack) closeGame(); });
+el("btnBackToMap").onclick = closeGame;
+  
 function shuffle(arr){
   const a=[...arr];
   for(let i=a.length-1;i>0;i--){
@@ -1837,7 +1910,7 @@ function finishLevel(){
 
   const msg = passed
     ? `🎉 通過！得分：<b>${s}/10</b>（≥8 會解鎖下一關）<br/><span class="small">時間：${fmt(spent)}</span>`
-    : `❌ 未通過。得分：<b>${s}/10</b>（需要 ≥8 才能解鎖下一關）<br/><span class="small">可以重玩本關再挑戰。</span>`;
+    : `❌ 未通過。得分：<b>${s}/10</b>（需要 ≥8 才能解鎖下一關）<br/><span class="small">可以重新挑戰。</span>`;
 
   const city = levelCity(game.level);
   const next = Math.min(LEVEL_COUNT, game.level+1);
@@ -1865,7 +1938,8 @@ function finishLevel(){
 
   refreshHomeStats();
   renderMap();
-  renderMistakeCard();  
+  renderMistakeCard();
+  updateQuickPracticeBtn();
 
   document.getElementById("btnGoMap2").onclick=closeGame;
   document.getElementById("btnReplayLevel").onclick=()=>startLevel(game.level);
