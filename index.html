@@ -484,39 +484,10 @@
   color:var(--muted);
   font-weight:900;
 }
-  #overlay{
-    position:fixed;
-    inset:0;
-    z-index:999;
-  }
-
-  .overlayBg{
-    position:absolute;
-    inset:0;
-    background:rgba(0,0,0,.4);
-  }
-
-  .overlayCard{
-    position:absolute;
-    bottom:0;
-    left:0;
-    right:0;
-    background:#fff;
-    border-radius:16px 16px 0 0;
-    padding:16px;
-  }
-
-  .overlayView{ display:none; }
 </style>
 </head>
 <body>
-  
-<div style="position:fixed;bottom:16px;left:16px;z-index:1000">
-  <button class="btn menuBtn" data-target="profile">👤</button>
-  <button class="btn menuBtn" data-target="map">🌍</button>
-  <button class="btn menuBtn" data-target="mistake">🧠</button>
-</div>
- 
+
 <div class="topbar">
   <div class="topbar-inner">
     <div class="brand">
@@ -537,7 +508,7 @@
 <div class="wrap">
   <div class="grid">
     <!-- left -->
-    <div class="card panel" style="display:none">
+    <div class="card panel">
       <h2>👤 使用者</h2>
       <div class="row" style="justify-content:space-between">
         <div class="pill">目前：<span id="curStudent">（尚未登入）</span></div>
@@ -1919,61 +1890,7 @@ function finishLevel(){
     refreshHomeStats();
   }
 })();
-   
-    <div id="overlay" style="display:none">
-    <div class="overlayBg"></div>
 
-    <div class="overlayCard">
-      <div class="overlayHandle"></div>
-
-      <div id="overlay-profile" class="overlayView">
-  <h2>👤 個人資訊</h2>
-
-  <div class="row" style="justify-content:space-between">
-    <div class="pill">目前：<span id="curStudent">（尚未登入）</span></div>
-    <div class="pill">已通關：<span id="curCleared">0</span>/100</div>
-  </div>
-
-  <div style="margin-top:10px">
-    <div class="label">輸入姓名（不可空白）</div>
-    <div class="row" style="margin-top:6px">
-      <input class="input" id="studentName" />
-      <button class="btn primary" id="btnLogin">登入</button>
-    </div>
-  </div>
-
-  <div class="kpi">
-    <div class="k"><b id="kLevel">—</b><small>當前關卡</small></div>
-    <div class="k"><b id="kNeed">8/10</b><small>過關門檻</small></div>
-    <div class="k"><b id="kBest">—</b><small>本關最高分</small></div>
-  </div>
-</div>
-
-      <div id="overlay-map" class="overlayView">
-        <h2>🌍 世界地圖</h2>
-        <div class="overlayContent"></div>
-      </div>
-
-      <div id="overlay-mistake" class="overlayView">
-        <h2>🧠 常錯誤單字</h2>
-        <div class="overlayContent"></div>
-      </div>
-    </div>
-  </div>
-
-  const overlay = document.getElementById("overlay");
-
-  document.querySelectorAll(".menuBtn").forEach(btn=>{
-    btn.onclick = ()=>{
-      overlay.style.display = "block";
-      document.querySelectorAll(".overlayView").forEach(v=>v.style.display="none");
-      document.getElementById("overlay-" + btn.dataset.target).style.display = "block";
-    };
-  });
-
-  document.querySelector(".overlayBg").onclick = ()=>{
-    overlay.style.display = "none";
-  };
 </script>
 </body>
 </html>
