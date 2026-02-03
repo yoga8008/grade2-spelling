@@ -470,28 +470,28 @@
 .mistakeCard{
   background: rgba(255,255,255,.95);
   border:1px solid rgba(148,163,184,.25);
-  border-radius:16px;
-  padding:12px;
+  border-radius:14px;
+  padding:8px 6px;       
   box-shadow: var(--shadow2);
   text-align:center;
 }
 
 .mistakeCard b{
-  display:block;
-  font-size:16px;
-  margin-bottom:4px;
+  font-size:14px;         
+  margin-bottom:2px;
 }
 
 .mistakeCard small{
-  color:var(--muted);
-  font-weight:900;
+  font-size:11px;     
 }
   .mapRight{
   display:flex;
   flex-direction:column;
   gap:16px;
 }
-
+.homeTypeSetting{
+  display:none;
+}
 </style>
 </head>
 <body>
@@ -553,26 +553,30 @@
 
       <div class="divider"></div>
 
-      <h2>⚙️ 題型設定</h2>
-      <div class="row">
-        <span class="pill">目前題型：<b id="typeSummary">全選 A/B/C/D</b></span>
-      </div>
-      <div class="help">
-        若選「全選」，每關 10 題會混合 A/B/C/D（平均分配，並隨機排序）。<br/>
-      </div>
+      <div class="homeTypeSetting">
+  <h2>⚙️ 題型設定</h2>
+  <div class="row">
+    <span class="pill">目前題型：<b id="typeSummary">全選 A/B/C/D</b></span>
+  </div>
+  <div class="help">
+    若選「全選」，每關 10 題會混合 A/B/C/D（平均分配，並隨機排序）。
+  </div>
+</div>
+
+  <div class="divider"></div>
 
       <div class="divider"></div>
 
-      <h2>▶️ 選單</h2>
+      <h2>▶️ 遊戲模式</h2>
       <div class="row" style="flex-wrap:nowrap; gap:10px">
-        <button class="btn primary" id="btnStartNext">🚀 關卡模式</button>
+        <button class="btn ghost" id="btnGoMap">🗺️ 關卡模式</button>
+        <button class="btn ghost" id="btnStartNext">🚀 挑戰模式</button>
         <button class="btn ghost" id="btnQuickPractice" style="display:none">📖 複習模式</button>
-        <button class="btn ghost" id="btnGoMap">🗺️ 世界地圖</button>
       </div>
       <div class="kpi">
         <div class="k"><b id="kLevel">—</b><small>當前關卡</small></div>
         <div class="k"><b id="kNeed">8/10</b><small>過關門檻</small></div>
-        <div class="k"><b id="kBest">—</b><small>本關最高分</small></div>
+        <div class="k"><b id="kBest">—</b><small>挑戰最高分</small></div>
       </div>
     </div>
 
@@ -618,11 +622,31 @@
     <div class="modalBody">
       <div class="gameHeader">
         <div class="left">
-          <span class="pill">題目：<b id="qIdx">1</b>/10</span>
-          <span class="pill">得分：<b id="score">0</b>/10</span>
-          <span class="pill">目標：<b>≥8</b> 解鎖下一關</span>
-          <span class="modeTag" id="modeTag">A</span>
-        </div>
+  <!-- 🗺️ 關卡模式顯示 -->
+  <span class="pill levelOnly">
+    📘 已作答：<b id="qIdx">0</b>/10
+  </span>
+  <span class="pill levelOnly">
+    🎯 得分：<b id="score">0</b>/10
+  </span>
+  <span class="pill levelOnly">
+    ⭐ 目標：≥8 解鎖下一關
+  </span>
+
+  <!-- 🏁 挑戰模式顯示 -->
+  <span class="pill challengeOnly" style="display:none">
+    ✅ 已答對：<b id="qIdx2">0</b>
+  </span>
+  <span class="pill challengeOnly" style="display:none">
+    🔥 連對中：<b id="streak">0</b>
+  </span>
+  <span class="pill challengeOnly" style="display:none">
+    🏆 最高連對：<b id="streakBest">0</b>
+  </span>
+
+  <span class="modeTag" id="modeTag">A</span>
+</div>
+
         <div class="row">
           <div class="timer">⏱️ <span id="time">00:00</span></div>
           <div class="progressBar"><div id="bar"></div></div>
@@ -698,6 +722,19 @@
 <div class="pop" id="pop"></div>
 
 <script>
+  let WORDS = [];
+
+fetch("./words.json")
+  .then(res => res.json())
+  .then(data => {
+    WORDS = data;
+    console.log("📚 題庫載入完成，共", WORDS.length, "筆");
+    init(); // 題庫載好才啟動
+  })
+  .catch(err => {
+    alert("題庫載入失敗，請確認 words.json 是否存在");
+    console.error(err);
+  });
 /* ==============================
    0) 世界地圖：100 關（城市＋洲別）
 ================================ */
@@ -774,113 +811,6 @@ const CONTINENT_BADGE = {
 };
 
 /* ==============================
-   1) 題庫（153 題｜完整）
-   格式：{en:"", zh:""}
-================================ */
-const WORDS = [
-  {en:"able", zh:"能夠的"}, {en:"about", zh:"關於"}, {en:"above", zh:"在上面"},
-  {en:"across", zh:"穿過；在對面"}, {en:"act", zh:"行動；表演"}, {en:"add", zh:"加"},
-  {en:"afraid", zh:"害怕的"}, {en:"after", zh:"在…之後"}, {en:"again", zh:"再一次"},
-  {en:"air", zh:"空氣"}, {en:"all", zh:"全部"}, {en:"always", zh:"總是"},
-  {en:"animal", zh:"動物"}, {en:"answer", zh:"答案；回答"}, {en:"apple", zh:"蘋果"},
-  {en:"arm", zh:"手臂"}, {en:"around", zh:"在周圍"}, {en:"ask", zh:"問"},
-  {en:"away", zh:"離開"}, {en:"baby", zh:"寶寶"}, {en:"back", zh:"後面；回來"},
-  {en:"ball", zh:"球"}, {en:"banana", zh:"香蕉"}, {en:"basket", zh:"籃子"},
-  {en:"bath", zh:"洗澡"}, {en:"beach", zh:"海灘"}, {en:"bear", zh:"熊"},
-  {en:"because", zh:"因為"}, {en:"bed", zh:"床"}, {en:"bee", zh:"蜜蜂"},
-  {en:"before", zh:"在…之前"}, {en:"begin", zh:"開始"}, {en:"behind", zh:"在後面"},
-  {en:"best", zh:"最好"}, {en:"big", zh:"大的"}, {en:"bird", zh:"鳥"},
-  {en:"birthday", zh:"生日"}, {en:"black", zh:"黑色"}, {en:"blue", zh:"藍色"},
-  {en:"boat", zh:"船"}, {en:"book", zh:"書"}, {en:"box", zh:"盒子"},
-  {en:"boy", zh:"男孩"}, {en:"bread", zh:"麵包"}, {en:"breakfast", zh:"早餐"},
-  {en:"bring", zh:"帶來"}, {en:"brother", zh:"兄弟"}, {en:"brown", zh:"棕色"},
-  {en:"bus", zh:"公車"}, {en:"busy", zh:"忙碌的"}, {en:"but", zh:"但是"},
-  {en:"buy", zh:"買"}, {en:"cake", zh:"蛋糕"}, {en:"call", zh:"打電話；呼叫"},
-  {en:"can", zh:"可以"}, {en:"cap", zh:"帽子"}, {en:"car", zh:"汽車"},
-  {en:"careful", zh:"小心的"}, {en:"carry", zh:"搬；拿"}, {en:"cat", zh:"貓"},
-  {en:"chair", zh:"椅子"}, {en:"chicken", zh:"雞；雞肉"}, {en:"children", zh:"孩子們"},
-  {en:"clean", zh:"乾淨的；打掃"}, {en:"clock", zh:"時鐘"}, {en:"close", zh:"關；靠近"},
-  {en:"cloud", zh:"雲"}, {en:"cold", zh:"冷的"}, {en:"color", zh:"顏色"},
-  {en:"come", zh:"來"}, {en:"cook", zh:"煮"}, {en:"cookie", zh:"餅乾"},
-  {en:"cool", zh:"涼爽的；很酷"}, {en:"corn", zh:"玉米"}, {en:"cow", zh:"牛"},
-  {en:"cry", zh:"哭"}, {en:"cup", zh:"杯子"}, {en:"cute", zh:"可愛的"},
-  {en:"dance", zh:"跳舞"}, {en:"day", zh:"天；白天"}, {en:"dear", zh:"親愛的"},
-  {en:"desk", zh:"書桌"}, {en:"dinner", zh:"晚餐"}, {en:"do", zh:"做"},
-  {en:"dog", zh:"狗"}, {en:"door", zh:"門"}, {en:"down", zh:"向下；下面"},
-  {en:"draw", zh:"畫"}, {en:"dream", zh:"夢"}, {en:"drink", zh:"喝"},
-  {en:"drive", zh:"開車"}, {en:"duck", zh:"鴨子"}, {en:"ear", zh:"耳朵"},
-  {en:"eat", zh:"吃"}, {en:"egg", zh:"蛋"}, {en:"eight", zh:"八"},
-  {en:"end", zh:"結束"}, {en:"enjoy", zh:"享受；喜歡"}, {en:"evening", zh:"晚上"},
-  {en:"every", zh:"每一個"}, {en:"eye", zh:"眼睛"}, {en:"face", zh:"臉"},
-  {en:"family", zh:"家人"}, {en:"far", zh:"遠的"}, {en:"farm", zh:"農場"},
-  {en:"fast", zh:"快的"}, {en:"father", zh:"爸爸"}, {en:"feel", zh:"感覺"},
-  {en:"find", zh:"找到"}, {en:"fish", zh:"魚"}, {en:"five", zh:"五"},
-  {en:"flower", zh:"花"}, {en:"fly", zh:"飛；蒼蠅"}, {en:"food", zh:"食物"},
-  {en:"four", zh:"四"}, {en:"friend", zh:"朋友"}, {en:"from", zh:"從"},
-  {en:"fruit", zh:"水果"}, {en:"fun", zh:"有趣"}, {en:"game", zh:"遊戲"},
-  {en:"garden", zh:"花園"}, {en:"get", zh:"得到；去拿"}, {en:"girl", zh:"女孩"},
-  {en:"give", zh:"給"}, {en:"go", zh:"去"}, {en:"good", zh:"好的"},
-  {en:"green", zh:"綠色"}, {en:"hair", zh:"頭髮"}, {en:"hand", zh:"手"},
-  {en:"happy", zh:"開心的"}, {en:"hat", zh:"帽子"}, {en:"have", zh:"有"},
-  {en:"he", zh:"他"}, {en:"hear", zh:"聽見"}, {en:"help", zh:"幫忙"},
-  {en:"here", zh:"這裡"}, {en:"home", zh:"家"}, {en:"hot", zh:"熱的"},
-  {en:"house", zh:"房子"}, {en:"how", zh:"如何"}, {en:"hungry", zh:"肚子餓"},
-  {en:"ice", zh:"冰"}, {en:"in", zh:"在裡面"}, {en:"jump", zh:"跳"},
-  {en:"kid", zh:"小孩"}, {en:"king", zh:"國王"}, {en:"kitchen", zh:"廚房"},
-  {en:"lake", zh:"湖"}, {en:"lamp", zh:"燈"}, {en:"laugh", zh:"笑"},
-  {en:"leaf", zh:"葉子"}, {en:"learn", zh:"學習"}, {en:"left", zh:"左邊"},
-  {en:"leg", zh:"腿"}, {en:"like", zh:"喜歡"}, {en:"lion", zh:"獅子"},
-  {en:"listen", zh:"聽"}, {en:"little", zh:"小的"}, {en:"live", zh:"住；活著"},
-  {en:"long", zh:"長的"}, {en:"look", zh:"看"}, {en:"love", zh:"愛"},
-  {en:"lunch", zh:"午餐"}, {en:"make", zh:"做；製作"}, {en:"man", zh:"男人"},
-  {en:"many", zh:"許多"}, {en:"meet", zh:"遇見"}, {en:"milk", zh:"牛奶"},
-  {en:"mom", zh:"媽媽"}, {en:"money", zh:"錢"}, {en:"moon", zh:"月亮"},
-  {en:"morning", zh:"早上"}, {en:"mother", zh:"媽媽"}, {en:"mouse", zh:"老鼠"},
-  {en:"music", zh:"音樂"}, {en:"name", zh:"名字"}, {en:"near", zh:"靠近"},
-  {en:"need", zh:"需要"}, {en:"new", zh:"新的"}, {en:"night", zh:"夜晚"},
-  {en:"nine", zh:"九"}, {en:"no", zh:"不"}, {en:"nose", zh:"鼻子"},
-  {en:"now", zh:"現在"}, {en:"number", zh:"數字"}, {en:"ocean", zh:"海洋"},
-  {en:"of", zh:"的"}, {en:"off", zh:"關掉；離開"}, {en:"on", zh:"在上面"},
-  {en:"one", zh:"一"}, {en:"open", zh:"打開"}, {en:"orange", zh:"橘子"},
-  {en:"outside", zh:"外面"}, {en:"over", zh:"在上方；結束"}, {en:"page", zh:"頁"},
-  {en:"paint", zh:"畫；油漆"}, {en:"paper", zh:"紙"}, {en:"park", zh:"公園"},
-  {en:"party", zh:"派對"}, {en:"pen", zh:"筆"}, {en:"pencil", zh:"鉛筆"},
-  {en:"people", zh:"人們"}, {en:"pet", zh:"寵物"}, {en:"phone", zh:"電話"},
-  {en:"pig", zh:"豬"}, {en:"pink", zh:"粉紅色"}, {en:"play", zh:"玩"},
-  {en:"please", zh:"請"}, {en:"pool", zh:"游泳池"}, {en:"purple", zh:"紫色"},
-  {en:"rain", zh:"雨"}, {en:"read", zh:"讀"}, {en:"red", zh:"紅色"},
-  {en:"right", zh:"右邊；正確"}, {en:"river", zh:"河"}, {en:"run", zh:"跑"},
-  {en:"sad", zh:"難過的"}, {en:"safe", zh:"安全的"}, {en:"say", zh:"說"},
-  {en:"school", zh:"學校"}, {en:"sea", zh:"海"}, {en:"see", zh:"看見"},
-  {en:"seven", zh:"七"}, {en:"she", zh:"她"}, {en:"ship", zh:"船"},
-  {en:"shirt", zh:"襯衫"}, {en:"shoe", zh:"鞋子"}, {en:"shop", zh:"商店"},
-  {en:"short", zh:"短的"}, {en:"show", zh:"展示"}, {en:"sing", zh:"唱歌"},
-  {en:"sister", zh:"姊妹"}, {en:"sit", zh:"坐"}, {en:"six", zh:"六"},
-  {en:"sleep", zh:"睡覺"}, {en:"small", zh:"小的"}, {en:"smart", zh:"聰明的"},
-  {en:"snow", zh:"雪"}, {en:"so", zh:"所以"}, {en:"some", zh:"一些"},
-  {en:"song", zh:"歌曲"}, {en:"sorry", zh:"對不起"}, {en:"spell", zh:"拼字"},
-  {en:"star", zh:"星星"}, {en:"start", zh:"開始"}, {en:"stay", zh:"停留"},
-  {en:"stop", zh:"停止"}, {en:"store", zh:"商店"}, {en:"sun", zh:"太陽"},
-  {en:"sweet", zh:"甜的"}, {en:"table", zh:"桌子"}, {en:"take", zh:"拿"},
-  {en:"talk", zh:"說話"}, {en:"teacher", zh:"老師"}, {en:"ten", zh:"十"},
-  {en:"thank", zh:"感謝"}, {en:"that", zh:"那個"}, {en:"the", zh:"這個(冠詞)"},
-  {en:"there", zh:"那裡"}, {en:"they", zh:"他們"}, {en:"three", zh:"三"},
-  {en:"time", zh:"時間"}, {en:"tired", zh:"累的"}, {en:"to", zh:"到；向"},
-  {en:"today", zh:"今天"}, {en:"tomorrow", zh:"明天"}, {en:"toy", zh:"玩具"},
-  {en:"train", zh:"火車；訓練"}, {en:"tree", zh:"樹"}, {en:"two", zh:"二"},
-  {en:"up", zh:"向上"}, {en:"use", zh:"使用"}, {en:"very", zh:"非常"},
-  {en:"walk", zh:"走路"}, {en:"want", zh:"想要"}, {en:"warm", zh:"溫暖的"},
-  {en:"water", zh:"水"}, {en:"we", zh:"我們"}, {en:"weather", zh:"天氣"},
-  {en:"welcome", zh:"歡迎"}, {en:"what", zh:"什麼"}, {en:"when", zh:"何時"},
-  {en:"where", zh:"哪裡"}, {en:"white", zh:"白色"}, {en:"who", zh:"誰"},
-  {en:"why", zh:"為什麼"}, {en:"win", zh:"贏"}, {en:"window", zh:"窗戶"},
-  {en:"with", zh:"和；跟"}, {en:"woman", zh:"女人"}, {en:"work", zh:"工作"},
-  {en:"write", zh:"寫"}, {en:"yellow", zh:"黃色"}, {en:"yes", zh:"是"},
-  {en:"you", zh:"你"}, {en:"your", zh:"你的"}
-];
-if (WORDS.length !== 153) console.warn("題庫不是153，實際：", WORDS.length);
-
-/* ==============================
    Storage / Student
 ================================ */
 const LS_KEY = "nmps_spelling_go_world_final_v1";
@@ -931,6 +861,9 @@ const gameBack = el("gameBack");
 const gameTitle = el("gameTitle");
 const qIdxEl = el("qIdx");
 const scoreEl = el("score");
+const qIdx2El = el("qIdx2");      // 挑戰用 已答對
+const streakEl = el("streak");
+const streakBestEl = el("streakBest");  
 const modeTagEl = el("modeTag");
 const timeEl = el("time");
 const barEl = el("bar");
@@ -1076,7 +1009,7 @@ function renderMistakeCard(){
     .filter(([w,st]) => (st.wrong||0) > 0 && (st.correctStreak||0) < 3)
     // 錯多的排前面
     .sort((a,b)=> (b[1].wrong||0) - (a[1].wrong||0))
-    .slice(0,12);
+    .slice(0,8);
 
   if(arr.length===0){
     mistakeBox.innerHTML = `<div class="small">尚無錯誤紀錄 🎉</div>`;
@@ -1221,8 +1154,8 @@ function refreshHomeStats(){
 
   const next = Math.min(LEVEL_COUNT, passedCount+1);
   kLevelEl.textContent = `${levelCity(next)}`;
-  const best = currentStudent.cleared?.[String(next)]?.bestScore;
-  kBestEl.textContent = (best==null) ? "—" : `${best}/10`;
+  const best = currentStudent.challengeBest ?? null;
+  kBestEl.textContent = (best==null) ? "—" : `${best} 分`;
 
   // update continent hint (summary)
   const grouped = groupLevelsByContinent();
@@ -1273,6 +1206,7 @@ function login(name){
 
   refreshHomeStats();
   renderMap();
+  renderMistakeCard();
 
   el("studentName").value = "";
 
@@ -1292,16 +1226,45 @@ el("btnResetStudent").onclick=()=>{
   currentName="";
   refreshHomeStats();
   renderMap();
+  mistakeBox.innerHTML = `<div class="small">尚無錯誤紀錄 🎉</div>`;
   alert("已清除。");
 };
 
-el("btnGoMap").onclick=()=>{ el("mapCanvas").scrollIntoView({behavior:"smooth"}); };
+el("btnGoMap").onclick=()=>{
+  if(!currentStudent){
+    alert("請先輸入姓名登入。");
+    return;
+  }
+
+  // 1️⃣ 算出目前應該挑戰的關卡
+  const passedCount = Object.values(currentStudent.cleared||{})
+    .filter(x=>x.passed).length;
+  const next = Math.min(LEVEL_COUNT, passedCount + 1);
+
+  // 2️⃣ 先捲到地圖區塊
+  el("mapCanvas").scrollIntoView({ behavior:"smooth", block:"start" });
+
+  // 3️⃣ 再捲到該城市關卡（等 DOM 穩定）
+  setTimeout(()=>{
+    const btns = document.querySelectorAll(".levelBtn");
+    const target = btns[next - 1]; // 關卡是從 1 開始
+    if(target){
+      target.scrollIntoView({
+        behavior:"smooth",
+        block:"center"
+      });
+      target.classList.add("highlight");
+      setTimeout(()=>target.classList.remove("highlight"), 1200);
+    }
+  }, 300);
+};
 
 el("btnStartNext").onclick=()=>{
-  if(!currentStudent){ alert("請先輸入姓名登入。"); return; }
-  const passedCount = Object.values(currentStudent.cleared||{}).filter(x=>x.passed).length;
-  const next = Math.min(LEVEL_COUNT, passedCount+1);
-  startLevel(next);
+  if(!currentStudent){
+    alert("請先輸入姓名登入。");
+    return;
+  }
+  startChallenge(); // ⭐ 進入挑戰模式
 };
 
   // ⭐ 複習模式按鈕（貼這行）
@@ -1332,6 +1295,7 @@ function startMistakePractice(){
   }
 
   game = {
+    mode: "practice",
     level: "mistake",
     qIndex: 0,
     score: 0,
@@ -1367,8 +1331,25 @@ function fmt(ms){
 }
 function startTimer(){
   stopTimer();
-  t0=Date.now();
-  tick=setInterval(()=>{ timeEl.textContent = fmt(Date.now()-t0); }, 200);
+  t0 = Date.now();
+
+  tick = setInterval(()=>{
+    const elapsed = Date.now() - t0;
+
+    // ⏱️ 挑戰模式：倒數
+    if(game?.mode === "challenge" && game.timeLimit){
+      const left = Math.max(0, game.timeLimit - elapsed);
+      timeEl.textContent = fmt(left);
+
+      if(left <= 0){
+        stopTimer();
+        finishLevel(); // 會自動進 finishChallenge
+      }
+    }else{
+      // 其他模式：正計時
+      timeEl.textContent = fmt(elapsed);
+    }
+  }, 200);
 }
 function openGame(){ gameBack.style.display="flex"; }
 function closeGame(){
@@ -1408,6 +1389,40 @@ function buildTypePlan(){
     return plan;
   }
 }
+function pickWordsAI(count){
+  const stats = currentStudent.wordStats || {};
+  const pool = WORDS.map(w=>{
+    const s = stats[w.en] || {};
+    const wrong = s.wrong || 0;
+    const streak = s.correctStreak || 0;
+    const weight = Math.max(1, 1 + wrong * 2 - streak);
+    return { word:w, weight };
+  });
+
+  const used = new Set();
+  const result = [];
+
+  while(result.length < count && pool.length){
+    const total = pool.reduce((a,b)=>a+b.weight,0);
+    let r = Math.random() * total;
+
+    let picked;
+    for(const p of pool){
+      r -= p.weight;
+      if(r <= 0){ picked = p.word; break; }
+    }
+    if(!picked) picked = pool[0].word;
+
+    if(!used.has(picked.en)){
+      used.add(picked.en);
+      result.push(picked);
+    }
+
+    const idx = pool.findIndex(p=>p.word.en === picked.en);
+    if(idx > -1) pool.splice(idx,1);
+  }
+  return result;
+}  
 
 function updateRateUI(){
   rateSlider.value = String(speechRate);
@@ -1445,7 +1460,20 @@ function speakWord(word){
 }
 el("btnPlay").onclick=()=>{
   if(!game) return;
+
+  const lv = game.level;
   const q = game.questions[game.qIndex];
+
+  // 🔒 Lv 51–70：只能播放 1 次
+  if(game.mode==="level" && lv >= 51 && lv <= 70){
+    if(game.playCount >= 1){
+      setFeedback("bad", "🔒 本題只能播放一次");
+      return;
+    }
+  }
+
+  game.playCount += 1;
+
   if(q.type==="A" || q.type==="D") speakWord(q.word.en);
   else if(q.type==="B") speakWord(q.word.en);
   else if(q.type==="C") speakWord(q.pairs[0].en);
@@ -1461,11 +1489,58 @@ function buildChoices(correctZh){
 }
 
 function updateTop(){
+
+  /* 🧠 複習模式 */
+  if(game.mode === "practice"){
+    gameTitle.textContent = "🧠 複習模式";
+
+    // 隱藏關卡 / 挑戰 KPI
+    document.querySelectorAll(".levelOnly")
+      .forEach(e=>e.style.display="none");
+    document.querySelectorAll(".challengeOnly")
+      .forEach(e=>e.style.display="none");
+    el("btnOpenTypeModal").style.display = "none";
+
+    // 進度條不使用
+    barEl.parentElement.style.display = "none";
+    return;
+  }
+
+  /* 🏁 限時挑戰 */
+  if(game.mode === "challenge"){
+    gameTitle.textContent = "🏁 挑戰模式";
+
+    document.querySelectorAll(".levelOnly")
+      .forEach(e=>e.style.display="none");
+    document.querySelectorAll(".challengeOnly")
+      .forEach(e=>e.style.display="inline-flex");
+    
+    el("btnOpenTypeModal").style.display = "inline-flex"; 
+
+    qIdx2El.textContent = game.score;
+    streakEl.textContent = game.streak;
+    streakBestEl.textContent = game.streakBest;
+ 
+    barEl.parentElement.style.display = "none";
+    return;
+  }
+
+  /* 🗺️ 關卡模式（原本的） */
+  el("btnOpenTypeModal").style.display = "none";
+  barEl.parentElement.style.display = "";
+  document.querySelectorAll(".levelOnly")
+    .forEach(e=>e.style.display="inline-flex");
+  document.querySelectorAll(".challengeOnly")
+    .forEach(e=>e.style.display="none");
+
   const city = levelCity(game.level);
   gameTitle.textContent = `📍 ${city}`;
-  qIdxEl.textContent = String(game.qIndex+1);
-  scoreEl.textContent = String(game.score);
-  barEl.style.width = `${((game.qIndex)/Q_PER_LEVEL)*100}%`;
+
+  qIdxEl.textContent = game.qIndex + 1;
+  scoreEl.textContent = game.score;
+
+  barEl.style.width =
+    `${((game.qIndex + 1) / Q_PER_LEVEL) * 100}%`;
 }
 
 function startLevel(level){
@@ -1491,6 +1566,7 @@ function startLevel(level){
   }
 
   game = {
+    mode: "level",
     level,
     qIndex:0,
     score:0,
@@ -1498,7 +1574,8 @@ function startLevel(level){
     streakBest:0,
     startedAt: Date.now(),
     questions,
-    history: Array(Q_PER_LEVEL).fill(null)
+    history: Array(Q_PER_LEVEL).fill(null),
+    playCount: 0
   };
 
   openGame();
@@ -1506,7 +1583,37 @@ function startLevel(level){
   startTimer();
   renderQuestion();
 }
+function startChallenge(){
+  if(!currentStudent){
+    alert("請先登入");
+    return;
+  }
 
+  game = {
+    mode: "challenge",
+    level: "challenge",
+    qIndex: 0,
+    score: 0,
+    streak: 0,
+    streakBest: 0,
+    startedAt: Date.now(),
+    timeLimit: 60 * 1000,
+    questions: pickWordsAI(999),
+    history: [],
+    usedWords: new Set()
+  };
+
+  gameTitle.textContent = "🏁 挑戰模式";
+  openGame();
+  updateRateUI();
+  startTimer();
+  renderQuestion();
+
+  modeTagEl.textContent = "挑戰";
+  el("btnBackToMap").style.display = "none";
+  el("btnPrev").style.display = "none";
+}
+  
 function renderQuestion(){
   clearFeedback();
   updateTop();
@@ -1520,9 +1627,16 @@ function renderQuestion(){
     D:"D 聽力拼音（聽→拼英文）"
   }[q.type];
 
-  qTitleEl.textContent = modeTitle;
-  qSubEl.textContent = `第 ${game.qIndex+1} / 10 題｜本關目標：≥8 分才能解鎖下一關`;
-
+if(game.mode === "practice"){
+  qSubEl.textContent = "📖 複習常錯單字｜加強記憶多練習";
+}
+else if(game.mode === "challenge"){
+  qSubEl.textContent = "限時挑戰中｜時間內盡量得分";
+}
+else{
+  qSubEl.textContent =
+    `第 ${game.qIndex+1} / 10 題｜本關目標：≥8 分解鎖下一關`;
+}
   questionArea.innerHTML = "";
 
   if(q.type==="A"){
@@ -1578,8 +1692,14 @@ if(q.type==="D"){
   `;
   questionArea.appendChild(box);
 
-  /* ✅ 新增：前 30 關拼字框框提示 */
-  const isEarlyLevel = game.level <= 30;
+  // ✅ Lv71+：D 題完全不顯示提示
+const isNoHint =
+  game.mode === "level" && game.level >= 71;
+
+if(!isNoHint){
+  const isEarlyLevel =
+    game.mode === "practice" || game.level <= 30;
+
   const hint = document.createElement("div");
   hint.className = "hintBox";
 
@@ -1587,17 +1707,13 @@ if(q.type==="D"){
     const letters = q.word.en.split("");
     const len = letters.length;
 
-    // 短字露 1 個，長字露 2 個
     const revealCount = len <= 4 ? 1 : 2;
-
-    // 隨機挑位置（不限首字）
     const idxs = [];
     while(idxs.length < revealCount){
       const r = Math.floor(Math.random() * len);
       if(!idxs.includes(r)) idxs.push(r);
     }
 
-    // 產生 _ _ p l _ 這種框框
     const masked = letters
       .map((ch,i)=> idxs.includes(i) ? ch : "_")
       .join(" ");
@@ -1613,8 +1729,9 @@ if(q.type==="D"){
     hint.textContent = "請聽發音，拼出正確英文單字。";
   }
 
-  // ⬆️ 提示放在輸入框上方
   box.prepend(hint);
+}
+
 
 const inp = box.querySelector("#typeAns");
 const btn = box.querySelector("#btnCheck");
@@ -1795,6 +1912,7 @@ function applyScore(gain, msg){
 
   game.history[game.qIndex] = { gain, streakBefore: before };
   updateTop();
+  renderMistakeCard();
 }
 
 function nextQuestion(){
@@ -1873,7 +1991,17 @@ function fireConfetti(){
 }
 
 function finishLevel(){
-  stopTimer();
+stopTimer();
+
+if(game.mode === "challenge"){
+  finishChallenge();
+  return;
+}
+
+if(game.mode !== "level"){
+  finishPractice();
+  return;
+}
   const spent = Date.now() - game.startedAt;
   const s = game.score;
   const passed = s >= PASS_SCORE;
@@ -1956,10 +2084,61 @@ function finishLevel(){
   el("btnNext").disabled=true;
 }
 
+function finishPractice(){
+  const s = game.score;
+  const spent = Date.now() - game.startedAt;
+
+  questionArea.innerHTML = `
+    <div class="center">
+      <div class="qTitle">📖 複習完成</div>
+      <div class="msg good" style="display:inline-block">
+        本次答對 <b>${s}</b> 題<br/>
+        <span class="small">時間：${fmt(spent)}</span>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn primary" id="btnBackHome">⬅️ 回主畫面</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("btnBackHome").onclick = closeGame;
+}  
+  function finishChallenge(){
+  stopTimer();
+
+  const spent = Date.now() - game.startedAt;
+  const s = game.score;
+
+  currentStudent.challengeBest = Math.max(
+    currentStudent.challengeBest || 0,
+    s
+  );
+  saveAll(ALL);
+
+  questionArea.innerHTML = `
+    <div class="center">
+      <div class="qTitle">🏁 挑戰模式結束</div>
+      <div class="msg good" style="display:inline-block">
+        本次得分：<b>${s}</b> 分<br/>
+        🏆 最高紀錄：<b>${currentStudent.challengeBest}</b> 分<br/>
+        <span class="small">時間：${fmt(spent)}</span>
+      </div>
+      <div style="margin-top:14px" class="row">
+        <button class="btn ghost" id="btnReplayChallenge">🔁 再挑戰一次</button>
+        <button class="btn primary" id="btnBackHome">⬅️ 回主畫面</button>
+      </div>
+    </div>
+  `;
+
+  el("btnReplayChallenge").onclick = startChallenge;
+  el("btnBackHome").onclick = closeGame;
+    
+  refreshHomeStats(); 
+}
 /* ==============================
    Init
 ================================ */
-(function init(){
+function init(){
   updateRateUI();
 
   if("speechSynthesis" in window){
@@ -1982,7 +2161,7 @@ function finishLevel(){
   }else{
     refreshHomeStats();
   }
-})();
+}
 
 </script>
 </body>
