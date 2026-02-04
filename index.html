@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -96,6 +97,18 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
   }
+  .leftCol{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+/* 右欄卡片間距（世界地圖 / 常錯誤單字） */
+.mapRight{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
   .panel{padding:16px;}
   .panel h2{margin:0 0 10px; font-size:16px; letter-spacing:.5px;}
   .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
@@ -194,6 +207,21 @@
     max-height: 680px;
     padding: 14px;
   }
+  .mistakeList{
+  max-height: 260px;      /* 固定高度 */
+  overflow-y: auto;       /* 超出就滾 */
+  padding-right: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 卷軸美化（跟地圖同感覺） */
+.mistakeList::-webkit-scrollbar{
+  width: 6px;
+}
+.mistakeList::-webkit-scrollbar-thumb{
+  background: rgba(0,0,0,.25);
+  border-radius: 6px;
+}
   .continentBlock{
     background: rgba(255,255,255,.78);
     border: 1px solid rgba(148,163,184,.18);
@@ -484,11 +512,6 @@
 .mistakeCard small{
   font-size:11px;     
 }
-  .mapRight{
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
 .homeTypeSetting{
   display:none;
 }
@@ -496,6 +519,70 @@
   font-size:16px;        /* 跟 .panel h2 一樣 */
   margin:0 0 10px;
   letter-spacing:.5px;
+}
+
+  /* =============================
+   📱📐 Tablet Landscape
+============================= */
+@media (min-width: 768px) and (max-width: 1024px)
+and (orientation: landscape){
+
+  .grid{
+    grid-template-columns: 360px 1fr;
+    gap:14px;
+  }
+
+  .mapCanvas{
+    max-height: 520px;
+  }
+
+  .mistakeList{
+    max-height: 200px;
+  }
+}
+  /* =========================
+   📱 Mobile Bottom Bar
+========================= */
+.mobileBar{
+  position: fixed;
+  left:0; right:0; bottom:0;
+  height:64px;
+  background: rgba(255,255,255,.95);
+  border-top:1px solid rgba(148,163,184,.3);
+  display:none;               /* 預設不顯示 */
+  justify-content:space-around;
+  align-items:center;
+  z-index:99;
+}
+
+.mobileBar button{
+  flex:1;
+  border:0;
+  background:none;
+  font-size:18px;
+  font-weight:900;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  color:#0f172a;
+}
+
+.mobileBar small{
+  font-size:11px;
+  font-weight:800;
+  color:#64748b;
+}
+
+/* 📱 手機才顯示 */
+@media (max-width: 768px){
+  .mobileBar{ display:flex; }
+  body{ padding-bottom:72px; } /* 避免被底部列蓋住 */
+}
+
+/* 💻 平板 / 電腦不顯示 */
+@media (min-width: 769px){
+  .mobileBar{ display:none; }
 }
 
 </style>
@@ -508,7 +595,7 @@
       <div class="logo">Go</div>
       <div>
         <h1>國小拼字挑戰 Go</h1>
-        <small>世界地圖 100 城市｜每關 10 題｜過關門檻：答對 ≥8 題 解鎖關卡</small>
+        <small>版本v06.0204｜小二程度</small>
       </div>
     </div>
     <div class="actions">
@@ -522,31 +609,34 @@
 <div class="wrap">
   <div class="grid">
     <!-- left -->
-    <div class="card panel">
-      <h2>👤 使用者</h2>
-      <div class="row" style="justify-content:space-between">
-        <div class="pill">目前：<span id="curStudent">（尚未登入）</span></div>
-        <div class="pill">已通關：<span id="curCleared">0</span>/100</div>
-      </div>
+  <!-- 👤 登入 / 使用者切換 -->
+<div class="leftCol">
+<div class="card panel" >
+  <h2>🔐 使用者登入</h2>
 
-      <div style="margin-top:10px">
   <div class="label">輸入姓名（不可空白）</div>
 
-<div class="row" style="margin-top:6px; gap:16px; flex-wrap:nowrap">
-  <input
-    class="input"
-    id="studentName"
-    placeholder="e.g. Name"
-    style="flex:1"
-  />
-  <button class="btn primary" id="btnLogin">登入</button>
-</div>
-        <div class="help">
-          ✅ 同一台手機/平板會記住多位使用者。<br/>
-          ⚠️ 不同手機登入：資料只存在各自裝置。無線上即時同步資料。
-        </div>
-      </div>
+  <div class="row" style="gap:16px; flex-wrap:nowrap">
+    <input
+      class="input"
+      id="studentName"
+      placeholder="e.g. Name"
+      style="flex:1"
+    />
+    <button class="btn primary" id="btnLogin">登入</button>
+  </div>
 
+  <div class="help">
+    ✅ 同一台手機／平板可記住多位使用者。<br/>
+    ⚠️ 不同裝置登入：資料只存在各自裝置，未支援即時同步。
+  </div>
+</div>
+    <div class="card panel" id="userInfoCard">
+      <h2>👤 使用者資訊</h2>
+      <div class="row" style="justify-content:space-between">
+        <div class="pill">使用者：<span id="curStudent">（尚未登入）</span></div>
+        <div class="pill">已通關：<span id="curCleared">0</span></div>
+      </div>
       <div class="divider"></div>
 
       <h2>🏅 徽章</h2>
@@ -568,10 +658,7 @@
     若選「全選」，每關 10 題會混合 A/B/C/D（平均分配，並隨機排序）。
   </div>
 </div>
-
   <div class="divider"></div>
-
-      <div class="divider"></div>
 
       <h2>▶️ 遊戲模式</h2>
       <div class="row" style="flex-wrap:nowrap; gap:10px">
@@ -587,7 +674,6 @@
     </div>
 
     <!-- right -->
-<!-- right -->
 <div class="mapRight">
 
   <!-- 世界地圖 -->
@@ -610,9 +696,9 @@
   </div>
 
   <!-- 常錯誤單字（獨立一塊） -->
-  <div class="card errorShell" style="margin-top:14px">
+  <div class="card errorShell">
     <h2>⚠️ 常錯誤單字</h2>
-    <div id="mistakeBox" class="mistakeGrid">
+    <div id="mistakeBox" class="mistakeGrid mistakeList">
       <div class="small">尚無錯誤紀錄 🎉</div>
     </div>
   </div>
@@ -686,9 +772,9 @@
         </div>
       </div>
 
-      <div id="feedback" style="margin-top:12px"></div>
+      <div id="feedback"></div>
 
-      <div class="small" style="margin-top:8px">
+      <div class="small">
         ※ A：聽→選中文（不顯示英文）｜D：聽→拼英文（不顯示英文）｜錯了會顯示正解。<br/>
         ※ C：中英配對每題 4 組；點錯會提示正解，但這題記 0 分（仍可完成配對）。
       </div>
@@ -704,7 +790,7 @@
       <button class="btn ghost" id="btnCloseType">✖ 關閉</button>
     </div>
     <div class="modalBody">
-      <div class="pill" style="background:rgba(37,99,235,.14); border-color:rgba(37,99,235,.30); margin-bottom:10px">
+      <div class="pill" style="background:rgba(37,99,235,.14); border-color:rgba(37,99,235,.30);">
         選「全選」：每關 10 題會混合 A/B/C/D（平均分配＋隨機排序）
       </div>
       <div class="typePick">
@@ -714,7 +800,7 @@
         <div class="chip" id="chipC">C：中英配對（每題 4 組）</div>
         <div class="chip" id="chipD">D：聽力拼音（聽→拼英文）</div>
       </div>
-      <div class="help" style="margin-top:10px">
+      <div class="help">
         至少要選 1 種題型。配對題（C）固定 4 組，點錯會直接提示正解。
       </div>
     </div>
@@ -1192,6 +1278,12 @@ function refreshHomeStats(){
     btn.style.display = "inline-flex";
     btn.textContent = "📖 複習模式";
   }
+     // 📱 同步手機底部「複習」按鈕狀態
+  const mbPractice = el("mbPractice");
+  if(mbPractice){
+    mbPractice.disabled = (count === 0);
+    mbPractice.style.opacity = (count === 0 ? 0.4 : 1);
+  }
 }
 
 function login(name){
@@ -1313,8 +1405,9 @@ function startMistakePractice(){
       word: w,
       answered:false
     })),
-    history:[]
-  };
+    history:[],
+    playCount: 0
+      };
 
   gameTitle.textContent = "🧠 複習模式";
   openGame();
@@ -1357,13 +1450,25 @@ function startTimer(){
     }
   }, 200);
 }
-function openGame(){ gameBack.style.display="flex"; }
+function openGame(){ 
+  gameBack.style.display="flex";
+
+  // 📱 進入遊戲 → 隱藏手機底部列
+  const mb = document.querySelector(".mobileBar");
+  if(mb) mb.style.display = "none";
+}
 function closeGame(){
   gameBack.style.display="none";
   stopTimer();
 
   el("btnBackToMap").style.display = "";
   el("btnPrev").style.display = "";
+
+  // 📱 回主畫面 → 顯示手機底部列
+  const mb = document.querySelector(".mobileBar");
+  if(mb && window.innerWidth <= 768){
+    mb.style.display = "flex";
+  }
 }
 el("btnCloseGame").onclick = closeGame;
 gameBack.addEventListener("click",(e)=>{ if(e.target===gameBack) closeGame(); });
@@ -1378,11 +1483,16 @@ function shuffle(arr){
   return a;
 }
 function pickWords(n){ return shuffle(WORDS).slice(0,n); }
-
 function getSelectedTypes(){
   if(typeMode.all) return ["A","B","C","D"];
-  const t = ["A","B","C","D"].filter(k=>typeMode[k]);
+  const t = ["A","B","C","D"].filter(k => typeMode[k]);
   return t.length ? t : ["A"];
+}
+
+// 🔹 挑戰模式用（永遠不出 C）
+function getChallengeTypes(){
+  if(typeMode.all) return ["A","B","D"];
+  return ["A","B","D"].filter(t => typeMode[t]);
 }
 function buildTypePlan(){
   if(typeMode.all){
@@ -1595,6 +1705,9 @@ function startChallenge(){
     return;
   }
 
+  /* =========================
+     1️⃣ 初始化挑戰狀態
+  ========================= */
   game = {
     mode: "challenge",
     level: "challenge",
@@ -1604,26 +1717,48 @@ function startChallenge(){
     streakBest: 0,
     startedAt: Date.now(),
     timeLimit: 60 * 1000,
-    questions: pickWordsAI(999),
+
+    questions: [],           // ⭐ 題目會「一題一題生成」
+    usedWords: new Set(),    // ⭐ 真正用來避免重複
     history: [],
-    usedWords: new Set()
+    playCount: 0
   };
 
+  /* =========================
+     2️⃣ 準備「可出題單字池」
+        - 用 AI 權重排序
+        - 但還沒真的出題
+  ========================= */
+  game.wordPool = pickWordsAI(999); // 大池，後面慢慢用
+
+  /* =========================
+     3️⃣ 預先生出第一題
+  ========================= */
+  generateNextChallengeQuestion();
+
+  /* =========================
+     4️⃣ 開始遊戲
+  ========================= */
   gameTitle.textContent = "🏁 挑戰模式";
+  modeTagEl.textContent = "挑戰";
+
+  el("btnBackToMap").style.display = "none";
+  el("btnPrev").style.display = "none";
+
   openGame();
   updateRateUI();
   startTimer();
   renderQuestion();
-
-  modeTagEl.textContent = "挑戰";
-  el("btnBackToMap").style.display = "none";
-  el("btnPrev").style.display = "none";
 }
   
 function renderQuestion(){
   clearFeedback();
   updateTop();
   const q = game.questions[game.qIndex];
+  if(!q || !q.type){
+  setFeedback("bad", "⚠️ 題目載入異常，請按下一題");
+  return;
+}
 
   modeTagEl.textContent = q.type;
   const modeTitle = {
@@ -1692,7 +1827,7 @@ if(q.type==="D"){
         autocomplete="off"
         autocapitalize="none" />
     </div>
-    <div class="row" style="justify-content:center; margin-top:12px">
+    <div class="row" style="justify-content:center">
       <button class="btn primary" id="btnCheck">✅ 確認</button>
     </div>
   `;
@@ -1727,7 +1862,7 @@ if(!isNoHint){
     hint.innerHTML = `
       🔔 拼字小提醒<br>
       ・這個單字有 <b>${len}</b> 個字母<br>
-      <div style="margin-top:6px;font-size:22px;letter-spacing:4px">
+      <div style="font-size:22px;letter-spacing:4px">
         ${masked}
       </div>
     `;
@@ -1823,6 +1958,13 @@ inp.addEventListener("keydown", (e) => {
           }
         }else{
           q.mistake = true;
+            // ⭐ 補：記錄錯誤
+          const w = q.selected.en;
+          currentStudent.wordStats = currentStudent.wordStats || {};
+          currentStudent.wordStats[w] = currentStudent.wordStats[w] || { wrong:0, correctStreak:0 };
+          currentStudent.wordStats[w].wrong += 1;
+          currentStudent.wordStats[w].correctStreak = 0;
+          saveAll(ALL);
           setFeedback("bad", `❌ 錯了！正確答案：<b>${q.selected.en}</b> = <b>${q.selected.zh}</b>`);
           q.selected = null;
           box.querySelectorAll(".mcard").forEach(x=>x.classList.remove("active"));
@@ -1920,28 +2062,75 @@ function applyScore(gain, msg){
   updateTop();
   renderMistakeCard();
 }
+  
+function generateNextChallengeQuestion(){
+  // 從還沒用過的單字中挑一個
+  const nextWord = game.wordPool.find(
+    w => !game.usedWords.has(w.en)
+  );
+
+  if(!nextWord){
+    return;
+  }
+
+  game.usedWords.add(nextWord.en);
+
+  const types = getChallengeTypes(); // 只會 A / B / D
+  const type = types[Math.floor(Math.random() * types.length)];
+
+  let q;
+
+  if(type === "D"){
+    q = {
+      type,
+      word: nextWord,
+      answered: false
+    };
+  }else{
+    q = {
+      type,
+      word: nextWord,
+      choices: buildChoices(nextWord.zh),
+      answered: false
+    };
+  }
+
+  game.questions.push(q);
+}
 
 function nextQuestion(){
   if(!game) return;
+
   const q = game.questions[game.qIndex];
 
+  // 必須先作答
   if((q.type==="A"||q.type==="B") && !q.answered){
-    alert("請先作答（選一個中文）。"); return;
+    alert("請先作答"); return;
   }
   if(q.type==="D"){
     const inp = questionArea.querySelector(".typeInput");
-    if(inp && !inp.disabled){ alert("請先輸入並確認答案。"); return; }
+    if(inp && !inp.disabled){
+      alert("請先輸入並確認答案"); return;
+    }
   }
   if(q.type==="C" && (q.donePairs||0) < 4){
-    alert("請先完成 4 組配對。"); return;
+    alert("請先完成配對"); return;
   }
 
-  if(game.qIndex < Q_PER_LEVEL-1){
-    game.qIndex += 1;
+  // 🔥【挑戰模式】不看 Q_PER_LEVEL
+  if(game.mode === "challenge"){
+    game.qIndex++;
+    generateNextChallengeQuestion();
+    renderQuestion();
+    return;
+  }
+
+  // 【關卡 / 複習】維持 10 題
+  if(game.qIndex < Q_PER_LEVEL - 1){
+    game.qIndex++;
     renderQuestion();
   }else{
     finishLevel();
-    renderMistakeCard();
   }
 }
 
@@ -2054,12 +2243,12 @@ if(game.mode !== "level"){
       <div class="msg ${passed?"good":"bad"}" style="display:inline-block; max-width:860px">
         <b>📍 ${city}</b><br/>${msg}
       </div>
-      <div style="margin-top:14px" class="row">
+      <div class="row">
         <button class="btn ghost" id="btnReplayLevel">🔁 重玩本關</button>
         <button class="btn primary" id="btnGoMap2">🗺️ 回世界地圖</button>
         <button class="btn ${passed?"primary":"ghost"}" id="btnNextLevel">${passed?`➡️ 下一關：${nextCity}`:"🔒 下一關（未解鎖）"}</button>
       </div>
-      <div class="help" style="max-width:860px; margin:12px auto 0">
+      <div class="help" style="max-width:860px">
         ✅ 下一關是否可點：取決於本關是否達到 8 分（含）。<br/>
         🔁 重玩：不會取消已解鎖關卡；本關最高分會更新。
       </div>
@@ -2129,7 +2318,7 @@ function finishPractice(){
         🏆 最高紀錄：<b>${currentStudent.challengeBest}</b> 分<br/>
         <span class="small">時間：${fmt(spent)}</span>
       </div>
-      <div style="margin-top:14px" class="row">
+      <div class="row">
         <button class="btn ghost" id="btnReplayChallenge">🔁 再挑戰一次</button>
         <button class="btn primary" id="btnBackHome">⬅️ 回主畫面</button>
       </div>
@@ -2166,9 +2355,72 @@ function init(){
     login(best);
   }else{
     refreshHomeStats();
-  }
+      }
+   initMobileBar();
+// 📱 Mobile bottom bar actions
+const mbMap = el("mbMap");
+const mbChallenge = el("mbChallenge");
+const mbPractice = el("mbPractice");
+const mbUser = el("mbUser");
+
+if(mbMap){
+  mbMap.onclick = () => el("btnGoMap")?.click();
 }
 
+if(mbChallenge){
+  mbChallenge.onclick = () => el("btnStartNext")?.click();
+}
+
+if(mbPractice){
+  mbPractice.onclick = () => {
+    const btn = el("btnQuickPractice");
+    if(btn && btn.style.display !== "none"){
+      btn.click();
+    }else{
+      alert("目前沒有需要複習的單字");
+    }
+  };
+}
+}
+  function initMobileBar(){
+  const mbMap = el("mbMap");
+  const mbChallenge = el("mbChallenge");
+  const mbPractice = el("mbPractice");
+  const mbUser = el("mbUser");
+
+  if(mbMap){
+    mbMap.onclick = () => el("btnGoMap")?.click();
+  }
+
+  if(mbChallenge){
+    mbChallenge.onclick = () => el("btnStartNext")?.click();
+  }
+
+  if(mbPractice){
+    mbPractice.onclick = () => {
+      const btn = el("btnQuickPractice");
+      if(btn && btn.style.display !== "none"){
+        btn.click();
+      }else{
+        alert("目前沒有需要複習的單字");
+      }
+    };
+  }
+
+mbUser.onclick = () => {
+  el("userInfoCard").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+};
+}
 </script>
+  <!-- 📱 Mobile Bottom Bar -->
+<div class="mobileBar">
+  <button id="mbUser">👤<small>使用者</small></button>
+  <button id="mbMap">🗺️<small>關卡</small></button>
+  <button id="mbChallenge">🚀<small>挑戰</small></button>
+  <button id="mbPractice">📖<small>複習</small></button>
+</div>
 </body>
 </html>
