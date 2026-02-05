@@ -666,6 +666,37 @@ and (orientation: landscape){
     max-width: 100%;
   }
 }
+/* 🎓 學習感配色（穩定 / 成就 / 成長） */
+.btn.primary.study-blue{
+  background: linear-gradient(180deg,#2563eb,#1e40af);
+}
+
+.btn.primary.study-gold{
+  background: linear-gradient(180deg,#f59e0b,#d97706);
+}
+
+.btn.primary.study-green{
+  background: linear-gradient(180deg,#22c55e,#15803d);
+}
+  /* ✨ 完成後發光動畫 */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(34,197,94,.6);
+    transform: scale(1.04);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    transform: scale(1);
+  }
+}
+
+.glow-once{
+  animation: glowPulse 0.9s ease-out;
+}
 </style>
 </head>
 <body>
@@ -754,11 +785,10 @@ and (orientation: landscape){
 <div class="card panel" id="gameModeCard">
   <h2>▶️ 遊戲模式</h2>
 
-  <div class="modeStack">
-    <button class="btn primary" id="btnGoMap">🗺️ 關卡模式</button>
-    <button class="btn primary" id="btnStartNext">🚀 挑戰模式</button>
-    <button class="btn primary" id="btnQuickPractice">📖 複習模式</button>
-  </div>
+<div class="modeStack">
+  <button class="btn primary blue" id="btnGoMap">🗺️ 關卡模式</button>
+  <button class="btn primary orange" id="btnStartNext">🚀 挑戰模式</button>
+  <button class="btn primary green" id="btnQuickPractice">📖 複習模式</button>
 </div>
     <!-- right -->
 <div class="mapRight">
@@ -1114,16 +1144,110 @@ el("btnSaveType").onclick=()=>{
    Home badges
 ================================ */
 const BADGE_DEFS = [
-  {id:"firstClear", icon:"🏁", color:"gold", name:"首次通關", desc:"第一次過關"},
-  {id:"streak5", icon:"🏅", color:"gold", name:"連勝 5 題", desc:"同一關連續答對 5 題"},
-  {id:"streak10", icon:"🏆", color:"gold", name:"連勝 10 題", desc:"同一關連續答對 10 題"},
-  {id:"perfect10", icon:"💯", color:"gold", name:"單關滿分", desc:"任一關 10/10"},
-  {id:"pass10", icon:"🗻", color:"gold", name:"日本小達人", desc:"累積過關 10 關"},
-  {id:"pass30", icon:"🌏", color:"gold", name:"亞洲小達人", desc:"過關 30 關"},
-  {id:"pass60", icon:"🌍", color:"gold", name:"歐洲小達人", desc:"累積過關 60 關"},
-  {id:"pass100", icon:"🗺️", color:"gold", name:"環遊世界", desc:"全部 100 關完成"}
-];
+   // 學習歷程
+  { id:"learnFromMistake", name:"不怕錯小勇士", icon:"🧠" },
+  { id:"practiceMaster", name:"複習小達人", icon:"📖" },
+  { id:"neverGiveUp", name:"不放棄挑戰者", icon:"🔁" },
+  { id:"steadyLearner", name:"穩定學習小高手", icon:"⏱️" },
 
+  // 關卡模式
+  { id:"firstClear", name:"首次通關", icon:"🏁" },
+  { id:"streak5", name:"連勝 5 題", icon:"🏅" },
+  { id:"streak10", name:"連勝 10 題", icon:"🏆" },
+  { id:"perfect10", name:"單關滿分", icon:"💯" },
+  { id:"japanMaster", name:"日本通達人", icon:"🗻" },
+  { id:"worldMaster", name:"環遊世界", icon:"🗺️" },
+
+  // 洲別
+  { id:"asiaMaster", name:"亞洲冒險家", icon:"🏯" },
+  { id:"europeMaster", name:"歐洲冒險家", icon:"🏰" },
+  { id:"americaMaster", name:"美洲冒險家", icon:"🗽" },
+  { id:"africaMaster", name:"非洲冒險家", icon:"🦁" },
+  { id:"oceaniaMaster", name:"大洋洲冒險家", icon:"🦘" },
+
+  // 挑戰模式
+  { id:"challenge10", name:"挑戰新手", icon:"🚀" },
+  { id:"challenge15", name:"挑戰達人", icon:"🎯" },
+  { id:"challenge20", name:"挑戰高手", icon:"🔥" },
+  { id:"challenge30", name:"挑戰王者", icon:"👑" },
+  { id:"calmFighter", name:"冷靜應戰", icon:"🧊" },
+];
+function checkBadges(context){
+  const s = currentStudent;
+  if(!s) return;
+
+  // 🧠 不怕錯小勇士
+  if(context.word){
+    const st = s.wordStats?.[context.word];
+    if(st && st.wrong >= 3 && st.correctStreak >= 3){
+      awardBadge("learnFromMistake");
+    }
+  }
+
+  // 📖 複習小達人
+  if(context.practiceFinished && s.practiceFinishedCount >= 5){
+    awardBadge("practiceMaster");
+  }
+
+  // 🔁 不放棄挑戰者
+  if(context.levelPassed && context.attempts >= 3){
+    awardBadge("neverGiveUp");
+  }
+
+  // ⏱️ 穩定學習
+  if(s.loginDays?.length >= 5){
+    awardBadge("steadyLearner");
+  }
+
+  // 💯 單關滿分
+  if(context.score === 10 && context.mode === "level"){
+    awardBadge("perfect10");
+  }
+
+  // 🗻 日本通達人（前 10 關）
+  const japanLevels = LEVELS
+  .map((l,i)=>({lvl:i+1, city:l.city}))
+  .filter(x =>
+    ["沖繩 Okinawa","大阪 Osaka","京都 Kyoto","名古屋 Nagoya","東京 Tokyo"]
+      .some(j => x.city.includes(j))
+  )
+  .map(x=>x.lvl)
+  .slice(0,10);
+
+if(japanLevels.length === 10 &&
+   japanLevels.every(lv => s.cleared?.[lv]?.bestScore === 10)){
+  awardBadge("japanMaster");
+}
+
+  // 🗺️ 環遊世界
+  if(Object.values(s.cleared||{}).length === 100 &&
+     Object.values(s.cleared).every(lv=>lv.bestScore===10)){
+    awardBadge("worldMaster");
+  }
+
+  // 🌍 洲別
+  const byCont = groupLevelsByContinent();
+  if(byCont["亞洲 Asia"]?.every(lv=>s.cleared?.[lv]?.bestScore===10))
+    awardBadge("asiaMaster");
+  if(byCont["歐洲 Europe"]?.every(lv=>s.cleared?.[lv]?.bestScore===10))
+  awardBadge("europeMaster");
+  if(byCont["美洲 Americas"]?.every(lv=>s.cleared?.[lv]?.bestScore===10))
+  awardBadge("americaMaster");
+  if(byCont["非洲 Africa"]?.every(lv=>s.cleared?.[lv]?.bestScore===10))
+  awardBadge("africaMaster");
+  if(byCont["大洋洲 Oceania"]?.every(lv=>s.cleared?.[lv]?.bestScore===10))
+  awardBadge("oceaniaMaster");
+
+
+  // 🚀 挑戰模式
+  if(context.mode === "challenge"){
+    if(context.score >= 10) awardBadge("challenge10");
+    if(context.score >= 15) awardBadge("challenge15");
+    if(context.score >= 20) awardBadge("challenge20");
+    if(context.score >= 30) awardBadge("challenge30");
+    if(context.streak >= 15) awardBadge("calmFighter");
+  }
+}
 function popToast(text){
   const p = el("pop");
   p.textContent = text;
@@ -1147,17 +1271,24 @@ function awardBadge(id){
   }
 }
 function renderBadges(){
-  badgeBox.innerHTML="";
-  const owned = (currentStudent && currentStudent.badges) ? currentStudent.badges : {};
-  BADGE_DEFS.forEach(b=>{
+   badgeBox.innerHTML="";
+  if(!currentStudent) return;
+
+  const owned = currentStudent.badges || {};
+
+  const list = [...BADGE_DEFS].sort((a,b)=>{
+    return (owned[b.id]?1:0) - (owned[a.id]?1:0);
+  });
+
+  list.forEach(b=>{
     const on = !!owned[b.id];
     const div = document.createElement("div");
     div.className="badge";
     div.innerHTML = `
-      <div class="icon ${on?b.color:"gray"}">${b.icon}</div>
+      <div class="icon ${on ? "gold" : "gray"}">${b.icon}</div>
       <div class="t">
-        <b>${b.name}${on?" ✅":""}</b>
-        <small>${b.desc}</small>
+        <b>${b.name}${on ? " ✅" : ""}</b>
+        <small>${on ? "已解鎖" : "尚未解鎖"}</small>
       </div>
     `;
     badgeBox.appendChild(div);
@@ -1236,6 +1367,10 @@ function continentProgress(cont){
    Render world map (grid by continents)
 ================================ */
 function renderMap(){
+  if(!currentStudent){
+  mapInner.innerHTML = `<div class="small">請先登入以顯示世界地圖</div>`;
+  return;
+}
   mapInner.innerHTML = "";
 
   const grouped = groupLevelsByContinent();
@@ -1369,6 +1504,11 @@ function login(name){
   ALL = loadAll();
   currentStudent = ensureStudent(ALL, name);
   currentName = name;
+  currentStudent.loginDays = currentStudent.loginDays || [];
+  const today = new Date().toDateString();
+  if(!currentStudent.loginDays.includes(today)){
+    currentStudent.loginDays.push(today);
+  }
   saveAll(ALL);
 
   refreshHomeStats();
@@ -1442,52 +1582,103 @@ el("btnQuickPractice").onclick = startMistakePractice;
 ================================ */
 let game = null;
 let tick=null, t0=0;
-function startMistakePractice(){
-  if(!currentStudent){
-    alert("請先登入");
-    return;
-  }
+  function startMistakePractice(){
+  if(!currentStudent) return;
 
   const stats = currentStudent.wordStats || {};
   const mistakeWords = Object.entries(stats)
     .filter(([w,st]) => (st.wrong||0) > 0 && (st.correctStreak||0) < 3)
-    .sort((a,b)=> (b[1].wrong||0)-(a[1].wrong||0))
-    .slice(0,10)
-    .map(([w])=> WORDS.find(x=>x.en===w))
+    .map(([w]) => WORDS.find(x => x.en === w))
     .filter(Boolean);
 
-  if(mistakeWords.length===0){
-    alert("🎉 沒有需要複習的單字！");
+  if(mistakeWords.length === 0){
+    alert("目前沒有需要複習的單字");
     return;
   }
 
   game = {
     mode: "practice",
-    level: "mistake",
+    level: "practice",
     qIndex: 0,
     score: 0,
     streak: 0,
     streakBest: 0,
     startedAt: Date.now(),
-    questions: mistakeWords.map(w=>({
-      type: "D",
-      word: w,
-      answered:false
-    })),
-    history:[],
+    questions: [],
+    history: [],
     playCount: 0
-      };
+  };
 
-  gameTitle.textContent = "🧠 複習模式";
+  // 每個錯字出一題（隨機 A/B/D）
+  mistakeWords.forEach(word => {
+    const types = ["A","B","D"];
+    const type = types[Math.floor(Math.random()*types.length)];
+
+    if(type === "D"){
+      game.questions.push({ type, word, answered:false });
+    }else{
+      game.questions.push({
+        type,
+        word,
+        choices: buildChoices(word.zh),
+        answered:false
+      });
+    }
+  });
+
   openGame();
   updateRateUI();
   startTimer();
   renderQuestion();
+}
 
-  // ⭐ 一定要在 function 裡
-  modeTagEl.textContent = "複習";
-  el("btnBackToMap").style.display = "none";
-  el("btnPrev").style.display = "none";
+  function applyScore(gain, msg){
+  const before = game.streak;
+
+  if(gain === 1){
+    game.score += 1;
+    game.streak += 1;
+    game.streakBest = Math.max(game.streakBest, game.streak);
+    setFeedback("good", msg);
+
+    if(game.streak === 5){
+      awardBadge("streak5");
+      popToast("🔥 連續答對 5 題！");
+    }
+    if(game.streak === 10){
+      awardBadge("streak10");
+      popToast("🔥 連續答對 10 題！");
+    }
+  }else{
+    game.streak = 0;
+    setFeedback("bad", msg);
+  }
+
+  const q = game.questions[game.qIndex];
+  if(q && q.word){
+    const w = q.word.en;
+    currentStudent.wordStats = currentStudent.wordStats || {};
+    const st = currentStudent.wordStats[w] || { wrong:0, correctStreak:0 };
+
+    if(gain === 1){
+      st.correctStreak += 1;
+    }else{
+      st.wrong += 1;
+      st.correctStreak = 0;
+    }
+
+    currentStudent.wordStats[w] = st;
+    saveAll(ALL);
+
+    checkBadges({
+      word: w,
+      mode: game.mode,
+      streak: game.streak
+    });
+  }
+
+  game.history[game.qIndex] = { gain, streakBefore: before };
+  updateTop();
 }
 
 function stopTimer(){ if(tick){ clearInterval(tick); tick=null; } }
@@ -1678,6 +1869,7 @@ function updateTop(){
   /* 🧠 複習模式 */
   if(game.mode === "practice"){
     gameTitle.textContent = "🧠 複習模式";
+    modeTagEl.textContent = "複習";
 
     // 隱藏關卡 / 挑戰 KPI
     document.querySelectorAll(".levelOnly")
@@ -2083,51 +2275,6 @@ function answerTyping(value){
   if(ok) applyScore(1, "✅ 答對！+1 分");
   else applyScore(0, `❌ 錯了！正確拼字是：<b>${q.word.en}</b>（中文：${q.word.zh}）`);
 }
-
-function applyScore(gain, msg){
-  const before = game.streak;
-
-  if(gain===1){
-    game.score += 1;
-    game.streak += 1;
-    game.streakBest = Math.max(game.streakBest, game.streak);
-    setFeedback("good", msg);
-
-    if(game.streak===5){ awardBadge("streak5"); popToast("🔥 連續答對 5 題！"); }
-    if(game.streak===10){ awardBadge("streak10"); popToast("🔥 連續答對 10 題！"); }
-    
-        // ⭐ 新增：同一單字連續答對次數
-    const q = game.questions[game.qIndex];
-    if(q.word){
-      const w = q.word.en;
-      currentStudent.wordStats = currentStudent.wordStats || {};
-      currentStudent.wordStats[w] = currentStudent.wordStats[w] || { wrong:0, correctStreak:0 };
-
-      currentStudent.wordStats[w].correctStreak += 1;
-
-      saveAll(ALL);
-    }
-
-}else{
-  game.streak = 0;
-  setFeedback("bad", msg);
-
-  const q = game.questions[game.qIndex];
-  if(q.word){
-    const w = q.word.en;
-    currentStudent.wordStats = currentStudent.wordStats || {};
-    currentStudent.wordStats[w] = currentStudent.wordStats[w] || { wrong:0, correctStreak:0 };
-
-    currentStudent.wordStats[w].wrong += 1;      // 錯誤 +1
-    currentStudent.wordStats[w].correctStreak = 0; // 錯了就斷連對
-
-    saveAll(ALL);
-  }
-}
-
-  game.history[game.qIndex] = { gain, streakBefore: before };
-  updateTop();
-}
   
 function generateNextChallengeQuestion(){
   // 從還沒用過的單字中挑一個
@@ -2162,6 +2309,7 @@ function generateNextChallengeQuestion(){
   }
 
   game.questions.push(q);
+  game.qIndex = game.questions.length - 1;
 }
 
 function nextQuestion(){
@@ -2192,14 +2340,24 @@ function nextQuestion(){
   }
 
   // 【關卡 / 複習】維持 10 題
-  if(game.qIndex < Q_PER_LEVEL - 1){
+ if(game.mode === "practice"){
+  if(game.qIndex < game.questions.length - 1){
     game.qIndex++;
     renderQuestion();
   }else{
-    finishLevel();
+    finishPractice();
   }
+  return;
 }
 
+// 【關卡模式】固定 10 題
+if(game.qIndex < Q_PER_LEVEL - 1){
+  game.qIndex++;
+  renderQuestion();
+}else{
+  finishLevel();
+}
+}
 function prevQuestion(){
   if(!game) return;
   if(game.qIndex===0) return;
@@ -2273,8 +2431,9 @@ if(game.mode !== "level"){
 
   old.attempts = (old.attempts||0) + 1;
   old.bestScore = Math.max(old.bestScore||0, s);
-
+  
   if(passed) old.passed = true;
+  glowButton("btnGoMap");
 
   const firstTimeClear = passed && !old.firstClearTs;
   if(firstTimeClear){
@@ -2286,13 +2445,6 @@ if(game.mode !== "level"){
   const passedCount = Object.values(currentStudent.cleared).filter(x=>x.passed).length;
   currentStudent.totalPassed = passedCount;
   currentStudent.lastPlayed = Date.now();
-
-  if(s===10) awardBadge("perfect10");
-  if(passedCount>=10) awardBadge("pass10");
-  if(passedCount>=30) awardBadge("pass30");
-  if(passedCount>=60) awardBadge("pass60");
-  if(passedCount>=100) awardBadge("pass100");
-
   saveAll(ALL);
 
   const msg = passed
@@ -2343,6 +2495,8 @@ if(game.mode !== "level"){
 }
 
 function finishPractice(){
+  currentStudent.practiceFinishedCount =
+  (currentStudent.practiceFinishedCount || 0) + 1;
   const s = game.score;
   const spent = Date.now() - game.startedAt;
 
@@ -2360,6 +2514,8 @@ function finishPractice(){
   `;
 
   document.getElementById("btnBackHome").onclick = closeGame;
+  checkBadges({ practiceFinished:true });
+  refreshHomeStats();
 }  
   function finishChallenge(){
   stopTimer();
@@ -2392,6 +2548,11 @@ function finishPractice(){
   el("btnBackHome").onclick = closeGame;
     
   refreshHomeStats(); 
+  checkBadges({
+  mode: "challenge",
+  score: s,
+  streak: game.streak
+}); 
 }
 /* ==============================
    Init
@@ -2442,7 +2603,7 @@ function init(){
       }
     };
   }
-
+if(mbUser){
 mbUser.onclick = () => {
   el("userAnchor").scrollIntoView({
     behavior: "smooth",
@@ -2450,6 +2611,16 @@ mbUser.onclick = () => {
   });
 };
 }
+}  
+  function glowButton(id){
+  const btn = document.getElementById(id);
+  if(!btn) return;
+
+  btn.classList.remove("glow-once"); // 保險
+  void btn.offsetWidth;              // 重新觸發動畫
+  btn.classList.add("glow-once");
+}
+
 </script>
   <!-- 📱 Mobile Bottom Bar -->
 <div class="mobileBar">
