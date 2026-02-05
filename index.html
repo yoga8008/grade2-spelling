@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -133,30 +132,12 @@
   .help{margin:10px 0 0; color: var(--muted); font-size: 12px; line-height:1.45; font-weight:800;}
   .kpi{
     display:grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-top: 12px;
   }
   /* ▶️ 遊戲模式：滿版三等分 */
-.modeGrid{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 12px;
-}
 
-.modeGrid .btn{
-  justify-content: center;
-  padding: 14px 10px;
-  font-size: 15px;
-}
-
-/* 📱 手機直排 */
-@media (max-width: 540px){
-  .modeGrid{
-    grid-template-columns: 1fr;
-  }
-}
   @media(max-width: 540px){ .kpi{grid-template-columns:1fr} }
   .k{
     background: rgba(255,255,255,.9);
@@ -174,6 +155,7 @@
     grid-template-columns: repeat(4, 1fr);
     gap:10px;
     margin-top: 10px;
+    width: 100%;
   }
   @media(max-width: 540px){ .badges{grid-template-columns:repeat(2,1fr)} }
   .badge{
@@ -226,21 +208,16 @@
     max-height: 680px;
     padding: 14px;
   }
-  .mistakeList{
-  max-height: 260px;      /* 固定高度 */
-  overflow-y: auto;       /* 超出就滾 */
+.mistakeScroll{
+  flex: 1;               /* ⭐ 吃掉標題以下所有高度 */
+  overflow-y: auto;      /* ⭐ 超出就自己捲 */
+  overflow-x: hidden;
   padding-right: 6px;
   -webkit-overflow-scrolling: touch;
 }
-
+ 
 /* 卷軸美化（跟地圖同感覺） */
-.mistakeList::-webkit-scrollbar{
-  width: 6px;
-}
-.mistakeList::-webkit-scrollbar-thumb{
-  background: rgba(0,0,0,.25);
-  border-radius: 6px;
-}
+
   .continentBlock{
     background: rgba(255,255,255,.78);
     border: 1px solid rgba(148,163,184,.18);
@@ -510,7 +487,9 @@
 ============================= */
 .mistakeGrid{
   display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px,1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  max-width: 520px;   /* ⭐ 限制整區寬度 */
+  margin: 0 auto;     /* ⭐ 置中 */
   gap:12px;
 }
 
@@ -531,8 +510,10 @@
 .mistakeCard small{
   font-size:11px;     
 }
-.homeTypeSetting{
-  display:none;
+  .errorShell{
+  height: 320px;          /* ← 關鍵：一定要有高度 */
+  display: flex;
+  flex-direction: column;
 }
 .errorShell h2{
   font-size:16px;        /* 跟 .panel h2 一樣 */
@@ -553,10 +534,6 @@ and (orientation: landscape){
 
   .mapCanvas{
     max-height: 520px;
-  }
-
-  .mistakeList{
-    max-height: 200px;
   }
 }
   /* =========================
@@ -603,7 +580,60 @@ and (orientation: landscape){
 @media (min-width: 769px){
   .mobileBar{ display:none; }
 }
+.userRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+#userAnchor{
+  position: relative;
+  top: -80px;   /* 等於 topbar 高度，可微調 */
+  height: 0;
+}
+  #mapAnchor{
+  position: relative;
+  top: -80px;   /* 跟 topbar 高度一致 */
+  height: 0;
+}
+.userName{
+  font-size:16px;
+  font-weight:1000;
+}
 
+.avatar{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  overflow:hidden;
+  border:2px solid rgba(148,163,184,.35);
+  background:#e5e7eb;
+}
+
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+  .badgeScroll{
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+  .modeStack{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.modeStack .btn{
+  justify-content:center;
+  padding:16px;
+  font-size:16px;
+}
+  .levelStatus .label{
+  margin-bottom:6px;
+}
 </style>
 </head>
 <body>
@@ -650,53 +680,63 @@ and (orientation: landscape){
     ⚠️ 不同裝置登入：資料只存在各自裝置，未支援即時同步。
   </div>
 </div>
-    <div class="card panel" id="userInfoCard">
-      <h2>👤 使用者資訊</h2>
-      <div class="row" style="justify-content:space-between">
-        <div class="pill">使用者：<span id="curStudent">（尚未登入）</span></div>
-        <div class="pill">已通關：<span id="curCleared">0</span></div>
-      </div>
-      <div class="divider"></div>
+  <div id="userAnchor"></div>
+   <div class="card panel" id="userInfoCard">
+  <h2>👤 使用者資訊</h2>
 
-      <h2>🏅 徽章</h2>
-      <div class="badges" id="badgeBox"></div>
-
-      <div class="divider"></div>
-
-      <h2>🌍 旅遊進度</h2>
-      <div class="help" id="continentHint">登入後會顯示每洲進度。</div>
-
-      <div class="divider"></div>
-
-      <div class="homeTypeSetting">
-  <h2>⚙️ 題型設定</h2>
-  <div class="row">
-    <span class="pill">目前題型：<b id="typeSummary">全選 A/B/C/D</b></span>
+  <!-- 使用者名稱＋頭像 -->
+  <div class="row userRow">
+    <div>
+      <div class="label">使用者</div>
+      <div class="userName" id="curStudent">（尚未登入）</div>
+    </div>
+    <div class="avatar">
+      <img id="avatarImg" src="avatar-default.png" alt="avatar">
+    </div>
   </div>
-  <div class="help">
-    若選「全選」，每關 10 題會混合 A/B/C/D（平均分配，並隨機排序）。
-  </div>
-</div>
+
   <div class="divider"></div>
 
-      <h2>▶️ 遊戲模式</h2>
-      <div class="modeGrid">
-      <button class="btn ghost" id="btnGoMap">🗺️ 關卡模式</button>
-      <button class="btn ghost" id="btnStartNext">🚀 挑戰模式</button>
-      <button class="btn ghost" id="btnQuickPractice">📖 複習模式</button>
-</div>
-      <div class="kpi">
-        <div class="k"><b id="kLevel">—</b><small>當前關卡</small></div>
-        <div class="k"><b id="kBest">—</b><small>挑戰最高分</small></div>
+  <!-- ⭐ 關卡狀態（小資訊區） -->
+  <div class="levelStatus">
+    <div class="label">關卡狀態</div>
+
+    <div class="kpi">
+      <div class="k">
+        <b id="kLevel">—</b>
+        <small>當前關卡</small>
+      </div>
+      <div class="k">
+        <b id="kBest">—</b>
+        <small>挑戰最高分</small>
       </div>
     </div>
+  </div>
 
+  <div class="divider"></div>
+
+  <!-- 徽章 -->
+  <h2>🏅 徽章</h2>
+  <div class="badgeScroll">
+    <div class="badges" id="badgeBox"></div>
+  </div>
+</div> 
+<div class="card panel" id="gameModeCard">
+  <h2>▶️ 遊戲模式</h2>
+
+  <div class="modeStack">
+    <button class="btn primary" id="btnGoMap">🗺️ 關卡模式</button>
+    <button class="btn primary" id="btnStartNext">🚀 挑戰模式</button>
+    <button class="btn primary" id="btnQuickPractice">📖 複習模式</button>
+  </div>
+</div>
     <!-- right -->
 <div class="mapRight">
 
   <!-- 世界地圖 -->
   <div class="card mapShell">
     <div class="mapHeader">
+    <div id="mapAnchor"></div>
       <h2>🗺️ 世界地圖</h2>
       <div class="row">
         <span class="pill">⭐ 過關：答對 ≥8 / 10</span>
@@ -714,8 +754,8 @@ and (orientation: landscape){
   <!-- 常錯誤單字（獨立一塊） -->
   <div class="card errorShell">
     <h2>⚠️ 常錯誤單字</h2>
-    <div id="mistakeBox" class="mistakeGrid mistakeList">
-      <div class="small">尚無錯誤紀錄 🎉</div>
+    <div class="mistakeScroll">
+    <div id="mistakeBox" class="mistakeGrid">
     </div>
   </div>
 </div>
@@ -923,6 +963,8 @@ const CONTINENT_BADGE = {
 ================================ */
 const LS_KEY = "nmps_spelling_go_world_final_v1";
 const el = id=>document.getElementById(id);
+const safe = id => document.getElementById(id) || { textContent:"", style:{}, classList:{ add(){}, remove(){} } };  
+  
 function loadAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch{ return {}; } }
 function saveAll(obj){ localStorage.setItem(LS_KEY, JSON.stringify(obj)); }
 
@@ -955,14 +997,11 @@ function sanitizeName(v){ return (v||"").replace(/\s+/g," ").trim(); }
 /* ==============================
    UI refs
 ================================ */
-const curStudentEl = el("curStudent");
-const curClearedEl = el("curCleared");
-const kLevelEl = el("kLevel");
-const kBestEl = el("kBest");
-const typeSummaryEl = el("typeSummary");
-const badgeBox = el("badgeBox");
+const curStudentEl = safe("curStudent");
+const kLevelEl = safe("kLevel");
+const kBestEl = safe("kBest");
+const badgeBox = safe("badgeBox");
 const mapInner = el("mapInner");
-const continentHint = el("continentHint");
 const mistakeBox = el("mistakeBox");
 
 const gameBack = el("gameBack");
@@ -1012,13 +1051,7 @@ function refreshTypeChips(){
   chipC.classList.toggle("on", !!typeMode.C && !typeMode.all);
   chipD.classList.toggle("on", !!typeMode.D && !typeMode.all);
 
-  if(typeMode.all){
-    typeSummaryEl.textContent = "全選 A/B/C/D";
-  }else{
-    const chosen = ["A","B","C","D"].filter(k=>typeMode[k]);
-    typeSummaryEl.textContent = chosen.length? chosen.join(" / ") : "（未選）";
   }
-}
 function openTypeModal(){ refreshTypeChips(); typeBack.style.display="flex"; }
 function closeTypeModal(){ typeBack.style.display="none"; }
 el("btnOpenTypeModal").onclick=openTypeModal;
@@ -1212,6 +1245,7 @@ function renderMap(){
 
       const btn = document.createElement("div");
       btn.className="levelBtn";
+      btn.dataset.level = lvl;
       if(passed) btn.classList.add("cleared");
       if(!unlocked) btn.classList.add("locked");
 
@@ -1248,36 +1282,35 @@ function renderMap(){
 ================================ */
 function refreshHomeStats(){
   if(!currentStudent){
-    curStudentEl.textContent="（尚未登入）";
-    curClearedEl.textContent="0";
-    kLevelEl.textContent="—";
-    kBestEl.textContent="—";
-    continentHint.textContent="登入後會顯示每洲進度與完成徽章。";
+    curStudentEl.textContent = "（尚未登入）";
+    kLevelEl.textContent = "—";
+    kBestEl.textContent = "—";
     renderBadges();
+    updateQuickPracticeBtn();
+    renderMistakeCard();
     return;
   }
-  curStudentEl.textContent = currentStudent.name;
-  const passedCount = Object.values(currentStudent.cleared||{}).filter(x=>x.passed).length;
-  curClearedEl.textContent = String(passedCount);
 
-  const next = Math.min(LEVEL_COUNT, passedCount+1);
-  kLevelEl.textContent = `${levelCity(next)}`;
+  curStudentEl.textContent = currentStudent.name;
+
+  const passedCount = Object.values(currentStudent.cleared||{})
+    .filter(x=>x.passed).length;
+
+  // ⭐ 當前關卡 = 已完成的最高關
+  if(passedCount === 0){
+    kLevelEl.textContent = "—";
+  }else{
+    kLevelEl.textContent = levelCity(passedCount);
+  }
+
   const best = currentStudent.challengeBest ?? null;
   kBestEl.textContent = (best==null) ? "—" : `${best} 分`;
 
-  // update continent hint (summary)
-  const grouped = groupLevelsByContinent();
-  const lines = Object.keys(CONTINENT_BADGE).filter(c=>grouped[c]).map(c=>{
-    const p = continentProgress(c);
-    const done = (p.total>0 && p.passed===p.total);
-    const badge = CONTINENT_BADGE[c];
-    return `${badge} ${c}：${p.passed}/${p.total}${done?" ✅":""}`;
-  });
-  continentHint.textContent = lines.join(" ｜ ");
-
   renderBadges();
   updateQuickPracticeBtn();
+  renderMistakeCard();
 }
+    
   
   function updateQuickPracticeBtn(){
   const btn = el("btnQuickPractice");
@@ -1344,33 +1377,34 @@ el("btnResetStudent").onclick=()=>{
   alert("已清除。");
 };
 
-el("btnGoMap").onclick=()=>{
-  if(!currentStudent){
-    alert("請先輸入姓名登入。");
-    return;
-  }
+el("btnGoMap").onclick = () => {
+  if(!currentStudent) return;
 
-  // 1️⃣ 算出目前應該挑戰的關卡
-  const passedCount = Object.values(currentStudent.cleared||{})
-    .filter(x=>x.passed).length;
-  const next = Math.min(LEVEL_COUNT, passedCount + 1);
+  // 已通關數
+  const passedCount = Object.values(currentStudent.cleared || {})
+    .filter(x => x.passed).length;
 
-  // 2️⃣ 先捲到地圖區塊
-  el("mapCanvas").scrollIntoView({ behavior:"smooth", block:"start" });
+  // 當前關卡 = 下一個可挑戰
+  const currentLevel = Math.min(LEVEL_COUNT, passedCount + 1);
 
-  // 3️⃣ 再捲到該城市關卡（等 DOM 穩定）
-  setTimeout(()=>{
-    const btns = document.querySelectorAll(".levelBtn");
-    const target = btns[next - 1]; // 關卡是從 1 開始
+  // 先捲到世界地圖標題
+  el("mapAnchor").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+  // 再捲到當前關卡
+  setTimeout(() => {
+    const target = document.querySelector(
+      `.levelBtn[data-level="${currentLevel}"]`
+    );
     if(target){
       target.scrollIntoView({
-        behavior:"smooth",
-        block:"center"
+        behavior: "smooth",
+        block: "center"
       });
-      target.classList.add("highlight");
-      setTimeout(()=>target.classList.remove("highlight"), 1200);
     }
-  }, 300);
+  }, 200);
 };
 
 el("btnStartNext").onclick=()=>{
@@ -2401,7 +2435,7 @@ function init(){
   }
 
 mbUser.onclick = () => {
-  el("userInfoCard").scrollIntoView({
+  el("userAnchor").scrollIntoView({
     behavior: "smooth",
     block: "start"
   });
