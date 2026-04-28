@@ -709,6 +709,24 @@ and (orientation: landscape){
   border-radius: 18px;
   padding: 12px;
 }
+  @keyframes flashGreen{
+  50%{ box-shadow:0 0 0 9999px rgba(34,197,94,.18) inset; }
+}
+
+@keyframes shakeRed{
+  20%{ transform:translateX(-6px); }
+  40%{ transform:translateX(6px); }
+  60%{ transform:translateX(-4px); }
+  80%{ transform:translateX(4px); }
+}
+
+.flashGreen{
+  animation:flashGreen .45s ease;
+}
+
+.shakeRed{
+  animation:shakeRed .35s ease;
+}
 </style>
 </head>
 <body>
@@ -808,6 +826,9 @@ and (orientation: landscape){
   <button class="btn primary orange" id="btnStartNext">🚀 挑戰模式</button>
   <button class="btn primary green" id="btnQuickPractice">📖 複習模式</button>
 </div>
+
+  </div> <!-- gameModeCard -->
+  </div> <!-- leftCol -->
     <!-- right -->
 <div class="mapRight">
 
@@ -837,6 +858,9 @@ and (orientation: landscape){
     </div>
   </div>
 </div>
+</div> <!-- mapRight -->
+</div> <!-- grid -->
+</div> <!-- wrap -->
 
 <!-- Game Modal -->
 <div class="modalBack" id="gameBack">
@@ -863,18 +887,18 @@ and (orientation: landscape){
   <span class="pill challengeOnly" style="display:none">
     ✅ 已答對：<b id="qIdx2">0</b>
   </span>
-  <span class="pill challengeOnly" style="display:none">
-    🔥 連對中：<b id="streak">0</b>
-  </span>
-  <span class="pill challengeOnly" style="display:none">
-    🏆 最高連對：<b id="streakBest">0</b>
-  </span>
+   <span class="pill challengeOnly" style="display:none">
+  生命：<b id="streak">❤️❤️❤️</b>
+</span>
+
+<span class="pill challengeOnly" style="display:none">
+  🏆 最高連對：<b id="streakBest">0</b>
+</span>
 
   <span class="modeTag" id="modeTag">A</span>
 </div>
 
         <div class="row">
-          <div class="timer">⏱️ <span id="time">00:00</span></div>
           <div class="progressBar"><div id="bar"></div></div>
         </div>
       </div>
@@ -892,24 +916,23 @@ and (orientation: landscape){
       </div>
 
       <div class="center">
-        <div class="qTitle" id="qTitle">題目</div>
         <div class="qSub" id="qSub">說明</div>
       </div>
 
       <div id="questionArea"></div>
 
-      <div class="footRow">
         <button class="btn ghost" id="btnPrev">⬅️ 上一題</button>
-        <div class="row" style="gap:8px">
-          <button class="btn ghost" id="btnBackToMap">🗺️ 回關卡</button>
-          <button class="btn primary" id="btnNext">➡️ 下一題</button>
-        </div>
-      </div>
+
+  <div class="row" style="gap:8px">
+    <button class="btn ghost" id="btnBackToMap" style="display:none">🗺️ 回關卡</button>
+    <button class="btn primary" id="btnNext" style="display:none">➡️ 下一題</button>
+  </div>
+</div>
 
       <div id="feedback"></div>
 
       <div class="small">
-        ※ A：聽→選中文（不顯示英文）｜D：聽→拼英文（不顯示英文）｜錯了會顯示正解。<br/>
+        ※ A：聽→選中文（不顯示英文）｜D：看中文→拼英文，可播放英文發音｜錯了會顯示正解。<br/>
         ※ C：中英配對每題 4 組；點錯會提示正解，但這題記 0 分（仍可完成配對）。
       </div>
     </div>
@@ -932,7 +955,7 @@ and (orientation: landscape){
         <div class="chip" id="chipA">A：聽力選字（聽→選中文）</div>
         <div class="chip" id="chipB">B：看英選字（看英文→選中文）</div>
         <div class="chip" id="chipC">C：中英配對（每題 4 組）</div>
-        <div class="chip" id="chipD">D：聽力拼音（聽→拼英文）</div>
+        <div class="chip" id="chipD">D：看中文→拼英文</div>
       </div>
       <div class="help">
         至少要選 1 種題型。配對題（C）固定 4 組，點錯會直接提示正解。
@@ -1051,6 +1074,8 @@ let currentStudent = null;
 let currentName = "";
 let typeMode = (ALL.settings && ALL.settings.typeMode) || { all:true, A:true,B:true,C:true,D:true };
 let speechRate = (ALL.settings && ALL.settings.speechRate) || 0.90;
+let challengeStart = 1;
+let challengeEnd = 153;
 
 function ensureStudent(all, name){
   if(!all.students) all.students = {};
@@ -1594,7 +1619,7 @@ el("btnStartNext").onclick=()=>{
     alert("請先輸入姓名登入。");
     return;
   }
-  startChallenge(); // ⭐ 進入挑戰模式
+  openChallengeRangePicker();
 };
 
   // ⭐ 複習模式按鈕（貼這行）
@@ -1673,9 +1698,20 @@ let tick=null, t0=0;
       popToast("🔥 連續答對 10 題！");
     }
   }else{
-    game.streak = 0;
+  game.streak = 0;
+
+  if(game.mode === "challenge"){
+    game.lives -= 1;
+    setFeedback("bad", msg);
+
+    if(game.lives <= 0){
+      setTimeout(()=>finishChallenge(), 500);
+      return;
+    }
+  }else{
     setFeedback("bad", msg);
   }
+}
 
   const q = game.questions[game.qIndex];
   if(q && q.word){
@@ -1718,18 +1754,12 @@ function startTimer(){
   tick = setInterval(()=>{
     const elapsed = Date.now() - t0;
 
-    // ⏱️ 挑戰模式：倒數
-    if(game?.mode === "challenge" && game.timeLimit){
-      const left = Math.max(0, game.timeLimit - elapsed);
-      timeEl.textContent = fmt(left);
-
-      if(left <= 0){
-        stopTimer();
-        finishLevel(); // 會自動進 finishChallenge
+    if(timeEl){
+      if(game?.mode === "challenge"){
+        timeEl.textContent = "";
+      }else{
+        timeEl.textContent = fmt(elapsed);
       }
-    }else{
-      // 其他模式：正計時
-      timeEl.textContent = fmt(elapsed);
     }
   }, 200);
 }
@@ -1754,7 +1784,6 @@ function closeGame(){
   }
 }
 el("btnCloseGame").onclick = closeGame;
-gameBack.addEventListener("click",(e)=>{ if(e.target===gameBack) closeGame(); });
 el("btnBackToMap").onclick = closeGame;
   
 function shuffle(arr){
@@ -1822,7 +1851,19 @@ function pickWordsAI(count){
   }
   return result;
 }  
+  
+function pickChallengePool(poolMode){
+  if(poolMode === "all"){
+    return pickWordsAI(999);
+  }
 
+  return shuffle(
+  WORDS.slice(
+    challengeStart - 1,
+    challengeEnd
+  )
+);
+}
 function updateRateUI(){
   rateSlider.value = String(speechRate);
   rateVal.textContent = Number(speechRate).toFixed(2);
@@ -1903,6 +1944,9 @@ function updateTop(){
 
     // 進度條不使用
     barEl.parentElement.style.display = "none";
+    el("btnBackToMap").style.display = "none";
+    el("btnNext").style.display = "none";
+
     return;
   }
 
@@ -1918,7 +1962,9 @@ function updateTop(){
     el("btnOpenTypeModal").style.display = "inline-flex"; 
 
     qIdx2El.textContent = game.score;
-    streakEl.textContent = game.streak;
+    streakEl.textContent =
+  "❤️".repeat(game.lives) +
+  "🖤".repeat(3 - game.lives);
     streakBestEl.textContent = game.streakBest;
  
     barEl.parentElement.style.display = "none";
@@ -1932,6 +1978,7 @@ function updateTop(){
     .forEach(e=>e.style.display="inline-flex");
   document.querySelectorAll(".challengeOnly")
     .forEach(e=>e.style.display="none");
+  el("btnBackToMap").style.display = "none";
 
   const city = levelCity(game.level);
   gameTitle.textContent = `📍 ${city}`;
@@ -1983,7 +2030,79 @@ function startLevel(level){
   startTimer();
   renderQuestion();
 }
-function startChallenge(){
+function openChallengeRangePicker(){
+  const total = WORDS.length;
+
+  gameBack.style.display = "flex";
+  gameTitle.textContent = "🚀 挑戰題庫範圍";
+  feedback.innerHTML = "";
+  modeTagEl.style.display = "none";
+
+  questionArea.innerHTML = `
+    <div class="center">
+      <div class="qTitle">選擇挑戰範圍</div>
+
+      <div class="hintBox">
+        第
+        <input type="number" id="rangeStart" class="input"
+          style="width:90px;display:inline-block;text-align:center"
+          min="1" max="${total}" value="${challengeStart}">
+        題
+        ～
+        第
+        <input type="number" id="rangeEnd" class="input"
+          style="width:90px;display:inline-block;text-align:center"
+          min="1" max="${total}" value="${challengeEnd}">
+        題
+      </div>
+
+      <div class="row" style="justify-content:center;margin-top:14px">
+        <button class="btn primary" id="btnStartRange">開始挑戰</button>
+        <button class="btn ghost" id="btnAllRange">ALL</button>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll(".levelOnly").forEach(e=>e.style.display="none");
+  document.querySelectorAll(".challengeOnly").forEach(e=>e.style.display="none");
+
+  el("btnBackToMap").style.display = "";
+  el("btnPrev").style.display = "none";
+  el("btnNext").style.display = "none";
+
+  function refreshRange(){
+    challengeStart = Number(el("rangeStart").value);
+    challengeEnd = Number(el("rangeEnd").value);
+
+    if(challengeStart < 1) challengeStart = 1;
+    if(challengeEnd < 1) challengeEnd = 1;
+    if(challengeStart > total) challengeStart = total;
+    if(challengeEnd > total) challengeEnd = total;
+    if(challengeStart > challengeEnd) challengeStart = challengeEnd;
+
+    el("rangeStart").value = challengeStart;
+    el("rangeEnd").value = challengeEnd;
+  }
+
+  el("rangeStart").onchange = refreshRange;
+  el("rangeEnd").onchange = refreshRange;
+
+  el("btnStartRange").onclick = ()=>{
+    refreshRange();
+    closeGame();
+    startChallenge("range");
+  };
+
+  el("btnAllRange").onclick = ()=>{
+    challengeStart = 1;
+    challengeEnd = total;
+    closeGame();
+    startChallenge("all");
+  };
+
+  refreshRange();
+}
+  function startChallenge(poolMode="range"){
   if(!currentStudent){
     alert("請先登入");
     return;
@@ -2000,7 +2119,7 @@ function startChallenge(){
     streak: 0,
     streakBest: 0,
     startedAt: Date.now(),
-    timeLimit: 60 * 1000,
+    lives: 3,
 
     questions: [],           // ⭐ 題目會「一題一題生成」
     usedWords: new Set(),    // ⭐ 真正用來避免重複
@@ -2013,7 +2132,7 @@ function startChallenge(){
         - 用 AI 權重排序
         - 但還沒真的出題
   ========================= */
-  game.wordPool = pickWordsAI(999); // 大池，後面慢慢用
+  game.wordPool = pickChallengePool(poolMode);
 
   /* =========================
      3️⃣ 預先生出第一題
@@ -2028,6 +2147,8 @@ function startChallenge(){
 
   el("btnBackToMap").style.display = "none";
   el("btnPrev").style.display = "none";
+  el("btnNext").style.display = "none";
+  el("btnNext").disabled = false;
 
   openGame();
   updateRateUI();
@@ -2038,6 +2159,7 @@ function startChallenge(){
 function renderQuestion(){
   clearFeedback();
   updateTop();
+  modeTagEl.style.display = "inline-flex";
   const q = game.questions[game.qIndex];
   if(!q || !q.type){
   setFeedback("bad", "⚠️ 題目載入異常，請按下一題");
@@ -2053,14 +2175,13 @@ function renderQuestion(){
   }[q.type];
 
 if(game.mode === "practice"){
-  qSubEl.textContent = "📖 複習常錯單字｜加強記憶多練習";
+  qSubEl.textContent = "";
 }
 else if(game.mode === "challenge"){
-  qSubEl.textContent = "限時挑戰中｜時間內盡量得分";
+  qSubEl.textContent = "";
 }
 else{
-  qSubEl.textContent =
-    `第 ${game.qIndex+1} / 10 題｜本關目標：≥8 分解鎖下一關`;
+  qSubEl.textContent = "";
 }
   questionArea.innerHTML = "";
 
@@ -2104,24 +2225,25 @@ else{
 if(q.type==="D"){
   const box = document.createElement("div");
   box.className="center";
-  box.innerHTML = `
-    <div class="typeWrap">
-      <input class="typeInput" id="typeAns"
-        placeholder="請輸入英文拼字"
-        autocomplete="off"
-        autocapitalize="none" />
-    </div>
-    <div class="row" style="justify-content:center">
-      <button class="btn primary" id="btnCheck">✅ 確認</button>
-    </div>
-  `;
+ box.innerHTML = `
+  <div class="typeWrap">
+    <input class="typeInput" id="typeAns"
+      placeholder="請輸入英文拼字"
+      autocomplete="off"
+      autocapitalize="none" />
+  </div>
+
+  <div class="row" style="justify-content:center">
+    <button class="btn primary" id="btnCheck">✅ 確認</button>
+  </div>
+`;
   questionArea.appendChild(box);
 
   // ✅ Lv71+：D 題完全不顯示提示
 const isNoHint =
-  game.mode === "level" && game.level >= 71;
+  game.mode === "level" && game.level >= 71 && false;
 
-if(!isNoHint){
+if(game.mode !== "challenge" && !isNoHint){
   const isEarlyLevel =
     game.mode === "practice" || game.level <= 30;
 
@@ -2143,15 +2265,19 @@ if(!isNoHint){
       .map((ch,i)=> idxs.includes(i) ? ch : "_")
       .join(" ");
 
-    hint.innerHTML = `
-      🔔 拼字小提醒<br>
-      ・這個單字有 <b>${len}</b> 個字母<br>
-      <div style="font-size:22px;letter-spacing:4px">
-        ${masked}
-      </div>
+   hint.innerHTML = `
+  <div style="
+    font-size:28px;
+    font-weight:900;
+    text-align:center;
+    letter-spacing:2px;
+    line-height:1.6;
+  ">
+    題目：${q.word.zh}　${masked.toUpperCase()}
+  </div>
     `;
   }else{
-    hint.textContent = "請聽發音，拼出正確英文單字。";
+    hint.textContent = "看中文意思，可按播放聽英文發音，再拼出英文單字。";
   }
 
   box.prepend(hint);
@@ -2237,9 +2363,20 @@ inp.addEventListener("keydown", (e) => {
           q.donePairs = (q.donePairs||0)+1;
 
           if(q.donePairs>=4){
-            const gained = q.mistake ? 0 : 1;
-            applyScore(gained, gained? "✅ 配對完成！本題 +1 分" : "⚠️ 配對完成，但本題曾答錯，故本題 0 分");
-          }
+  const gained = q.mistake ? 0 : 1;
+  playAnswerEffect(gained===1);
+
+  applyScore(
+    gained,
+    gained
+      ? "✅ 配對完成！本題 +1 分"
+      : "⚠️ 配對完成，但本題曾答錯，故本題 0 分"
+  );
+
+  setTimeout(()=>{
+    nextQuestion();
+  }, 500);
+}
         }else{
           q.mistake = true;
             // ⭐ 補：記錄錯誤
@@ -2269,7 +2406,7 @@ function answerChoice(pickedZh){
 
   const correct = q.word.zh;
   const ok = pickedZh === correct;
-
+  playAnswerEffect(ok);
   const nodes = questionArea.querySelectorAll(".choice");
   nodes.forEach(n=>{
     if(n.textContent===correct) n.classList.add("good");
@@ -2280,10 +2417,17 @@ function answerChoice(pickedZh){
   q.answered=true;
   q.correct=ok;
 
-  if(ok) applyScore(1, "✅ 答對！+1 分");
-  else applyScore(0, `❌ 錯了！正確答案是：<b>${correct}</b>`);
+  if(ok){
+  applyScore(1, "✅ 答對！+1 分");
+}else{
+  applyScore(0, `❌ 錯了！正確拼字是：<b>${q.word.en}</b>（中文：${q.word.zh}）`);
 }
 
+// 0.8 秒後自動下一題
+setTimeout(()=>{
+  nextQuestion();
+}, 500);
+}
 function answerTyping(value){
   const q = game.questions[game.qIndex];
   if(q.type!=="D") return;
@@ -2291,14 +2435,22 @@ function answerTyping(value){
   const ans = (value||"").trim().toLowerCase();
   const correct = q.word.en.trim().toLowerCase();
   const ok = ans === correct;
+  playAnswerEffect(ok);
 
   const inp = questionArea.querySelector(".typeInput");
   if(inp) inp.disabled=true;
 
-  if(ok) applyScore(1, "✅ 答對！+1 分");
-  else applyScore(0, `❌ 錯了！正確拼字是：<b>${q.word.en}</b>（中文：${q.word.zh}）`);
+  if(ok){
+  applyScore(1, "✅ 答對！+1 分");
+}else{
+  applyScore(0, `❌ 錯了！正確拼字是：<b>${q.word.en}</b>（中文：${q.word.zh}）`);
 }
-  
+
+// 0.8 秒後自動下一題
+setTimeout(()=>{
+  nextQuestion();
+}, 500);
+}  
 function generateNextChallengeQuestion(){
   // 從還沒用過的單字中挑一個
   const nextWord = game.wordPool.find(
@@ -2567,7 +2719,7 @@ function finishPractice(){
     </div>
   `;
 
-  el("btnReplayChallenge").onclick = startChallenge;
+  el("btnReplayChallenge").onclick = ()=>startChallenge("range");
   el("btnBackHome").onclick = closeGame;
     
   refreshHomeStats(); 
@@ -2668,7 +2820,14 @@ el("avatarInput").addEventListener("change", e => {
   };
   reader.readAsDataURL(file);
 });
+function playAnswerEffect(correct){
+  const modal = document.querySelector(".modal");
 
+  modal.classList.remove("flashGreen","shakeRed");
+  void modal.offsetWidth;
+
+  modal.classList.add(correct ? "flashGreen" : "shakeRed");
+}
 </script>
   <!-- 📱 Mobile Bottom Bar -->
 <div class="mobileBar">
