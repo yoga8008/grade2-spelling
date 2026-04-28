@@ -2243,9 +2243,9 @@ if(q.type==="D"){
 const isNoHint =
   game.mode === "level" && game.level >= 71 && false;
 
-if(game.mode !== "challenge" && !isNoHint){
+if(!isNoHint){
   const isEarlyLevel =
-    game.mode === "practice" || game.level <= 30;
+  game.mode === "practice" || game.mode === "challenge" || game.level <= 30;
 
   const hint = document.createElement("div");
   hint.className = "hintBox";
